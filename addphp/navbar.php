@@ -38,7 +38,7 @@
             <nav>
                 <ul class="menu-items">
                     <li class="active"><a href="#" ><i class="fas fa-dashboard"></i> Dashboard</a></li>
-                    <li><a href="#"><i class="fas fa-item"></i> Items</a></li>
+                    <li><a href="#"><i class="fas fa-items"></i> Items</a></li>
                     <li><a href="#"><i class="fas fa-shopping-cart"></i> Orders</a></li>
                     <li><a href="#"><i class="fas fa-exchange-alt"></i> Backorders</a></li>
                     <li><a href="#"><i class="fas fa-boxes"></i> Stock</a></li>
