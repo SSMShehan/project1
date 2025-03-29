@@ -1,6 +1,6 @@
 <?php
 include '../addphp/navbar.php';
-require_once 'config/ims db.php';
+require_once '../config/db_config.php';
 ?>
 
 
@@ -125,5 +125,4 @@ require_once 'config/ims db.php';
 
 <?php
 include '../addphp/footer.php';
-/*require_once 'config/db_config.php';*/
 ?>
