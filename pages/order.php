@@ -1,6 +1,10 @@
 <?php
 include '../addphp/navbar.php';
+<<<<<<< HEAD
 require_once 'config/db_config.php';
+=======
+require_once 'config/ims db.php';
+>>>>>>> 181214fd1b949df5e7b1a21f2183e612292c0205
 ?>
 
 
