@@ -38,13 +38,13 @@
             <nav>
                 <ul class="menu-items">
                     <li class="active"><a href="#" ><i class="fas fa-dashboard"></i> Dashboard</a></li>
-                    <li><a href="#"><i class="fas fa-items"></i> Items</a></li>
+                    <li><a href="#"><i class="fa-solid fa-shirt"></i></i> Items</a></li>
                     <li><a href="#"><i class="fas fa-shopping-cart"></i> Orders</a></li>
                     <li><a href="#"><i class="fas fa-exchange-alt"></i> Backorders</a></li>
                     <li><a href="#"><i class="fas fa-boxes"></i> Stock</a></li>
                     <li><a href="#"><i class="fas fa-file-invoice-dollar"></i> Purchases orders</a></li>
                     <li><a href="#"><i class="fas fa-truck"></i> Receive orders</a></li>
-                    <li><a href="#"><i class="fas fa-tshirt"></i> Final product</a></li>
+                    <li><a href="#"><i class="fa-solid fa-check-to-slot"></i> Final product</a></li>
                     <li><a href="#"><i class="fas fa-chart-line"></i> Sales</a></li>
                     <li><a href="#"><i class="fas fa-users"></i> Users</a></li>
                     <li><a href="#"><i class="fas fa-cog"></i> Setting</a></li>
