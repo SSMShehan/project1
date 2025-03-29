@@ -82,3 +82,18 @@ document.addEventListener('DOMContentLoaded', function() {
 document.querySelector('.back-btn').addEventListener('click', () => {
     alert('Go Back Clicked!');
 });
+
+
+// Get all menu items
+const menuItems = document.querySelectorAll('.menu-items li');
+
+// Add click event listener to each menu item
+menuItems.forEach(item => {
+  item.addEventListener('click', function() {
+    // Remove 'active' class from all items
+    menuItems.forEach(i => i.classList.remove('active'));
+    
+    // Add 'active' class to the clicked item
+    this.classList.add('active');
+  });
+});
