@@ -58,7 +58,7 @@ $result = $conn->query($sql_customer_details);
 $conn->close();
 
 include '../addphp/footer.php';
-/*require_once 'config/db_config.php';*/
+
 ?>
 
 
