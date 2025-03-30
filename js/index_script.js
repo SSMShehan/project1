@@ -56,7 +56,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add event listeners for edit and delete buttons
     const editButtons = document.querySelectorAll('.btn-edit');
-    const deleteButtons = document.querySelectorAll('.btn-delete');
+   
+   
+   const deleteButtons = document.querySelectorAll('.btn-delete');
     
     editButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -66,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    deleteButtons.forEach(button => {
+   /* deleteButtons.forEach(button => {
         button.addEventListener('click', function() {
             const row = this.closest('tr');
             const itemName = row.cells[1].textContent;
@@ -76,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 updatePagination();
             }
         });
-    });
+    });*/
 });
 
 document.querySelector('.back-btn').addEventListener('click', () => {
