@@ -37,7 +37,7 @@ $result = $conn->query($sql_stock_details);
                     <td>".($row["Date_updated"] ? $row["Date_updated"] : "NULL")."</td>
                     <td>
                         <button class='btn-edit'><i class='fas fa-edit'></i></button>
-                        <button class='btn-delete'><i class='fas fa-trash'></i></button>
+                        
                     </td>
                 </tr>";
             }

@@ -66,17 +66,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    deleteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const row = this.closest('tr');
-            const itemName = row.cells[1].textContent;
-            if (confirm(`Are you sure you want to delete ${itemName}?`)) {
-                row.remove();
-                // Update pagination after deletion
-                updatePagination();
-            }
-        });
-    });
+    // deleteButtons.forEach(button => {
+    //     button.addEventListener('click', function() {
+    //         const row = this.closest('tr');
+    //         const itemName = row.cells[1].textContent;
+    //         if (confirm(`Are you sure you want to delete ${itemName}?`)) {
+    //             row.remove();
+    //             // Update pagination after deletion
+    //             updatePagination();
+    //         }
+    //     });
+    // });
 });
 
 document.querySelector('.back-btn').addEventListener('click', () => {

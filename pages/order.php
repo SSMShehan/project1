@@ -19,6 +19,7 @@ $result = $conn->query($sql_order_details);
                             <th>Quantity</th>
                             <th>Date Created</th>
                             <th>Date Updated</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -36,7 +37,10 @@ $result = $conn->query($sql_order_details);
                     <td>".$row["Quantity"]."</td>
                     <td>".$row["Date_created"]."</td>
                     <td>".($row["Date_updated"] ? $row["Date_updated"] : "NULL")."</td>
-                  
+                  <td>
+                        <button class='btn-edit'><i class='fas fa-edit'></i></button>
+                        
+                    </td>
                 </tr>";
             }
         } else {

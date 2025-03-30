@@ -44,7 +44,7 @@ $result = $conn->query($sql_item_details);
                         <td>".$row["Date_created"]."</td>
                         <td>
                         <button class='btn-edit'><i class='fas fa-edit'></i></button>
-                        <button class='btn-delete'><i class='fas fa-trash'></i></button>
+                        
                     </td>
                        
                          </tr>";

@@ -22,6 +22,7 @@ $result = $conn->query($sql_purchase_details);
                             <th>Discount</th>
                             <th>Tax</th>
                             <th>Date</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
 
@@ -42,7 +43,10 @@ $result = $conn->query($sql_purchase_details);
                         <td>".$row["Discount"]."</td>
                         <td>".$row["Tax"]."</td>
                         <td>".$row["Date"]."</td>
-                       
+                       <td>
+                        <button class='btn-edit'><i class='fas fa-edit'></i></button>
+                        
+                    </td>
                          </tr>";
             }
         } else {
