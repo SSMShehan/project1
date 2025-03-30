@@ -80,7 +80,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 document.querySelector('.back-btn').addEventListener('click', () => {
-    alert('Go Back Clicked!');
+
+    window.location.href = 'Dashboard.php';
+
 });
 
 
