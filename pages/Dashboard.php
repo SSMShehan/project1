@@ -11,7 +11,7 @@ include '../addphp/navbar.php';
     <!-- Cards Grid -->
     <div class="cards-grid">
         <!-- Items Card -->
-            <a href="Item.php">
+            <a href="Items.php">
                 <div class="dashboard-card">
                 
                     <div class="card-icon1">
@@ -79,7 +79,7 @@ include '../addphp/navbar.php';
         </a>
 
         <!-- Receive Orders Card -->
-        <a href="Receviveorders.php">
+        <a href="Receiveorders.php">
             <div class="dashboard-card highlight">
             <div class="card-icon6">
             <i class="fas fa-truck"></i>
@@ -92,7 +92,7 @@ include '../addphp/navbar.php';
         </a>
 
         <!-- Final Products Card -->
-        <a href=Finalproduct.php">
+        <a href="Finalproduct.php">
             <div class="dashboard-card">
             <div class="card-icon7">
             <i class="fa-solid fa-check-to-slot"></i>
