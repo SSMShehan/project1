@@ -6,18 +6,18 @@ include '../addphp/navbar.php';
 <table id="inventoryTable">
                     <thead>
                         <tr>
-                            <th>Item No</th>
-                            <th>Item Name</th>
-                            <th>Description</th>
-                            <th>Price</th>
-                            <th>Status</th>
+                            <th>Product ID</th>
+                            <th>Item ID</th>
+                            <th>Quantity</th>
+                            <th>unit</th>
+                            <th>type</th>
                             <th>Date Created</th>
-                            <th>Actions</th>
+                            <th>Date update</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>0001</td>
+                            <td>1</td>
                             <td>T-Shirt</td>
                             <td>Cotton, Size M</td>
                             <td>$20</td>
