@@ -84,7 +84,7 @@ document.querySelector('.back-btn').addEventListener('click', () => {
 });
 
 
-// Get all menu items
+// Get all menu items (li elements)
 const menuItems = document.querySelectorAll('.menu-items li');
 
 // Add click event listener to each menu item
@@ -97,3 +97,16 @@ menuItems.forEach(item => {
     this.classList.add('active');
   });
 });
+
+// Optional: Automatically set the active link on page load based on the current URL
+const currentPage = window.location.pathname.split('/').pop(); // Get current page file name
+
+menuItems.forEach(item => {
+  const link = item.querySelector('a');
+  if (link && link.href.includes(currentPage)) {
+    item.classList.add('active');
+  }
+});
+
+
+

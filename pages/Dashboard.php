@@ -133,6 +133,3 @@ include '../addphp/navbar.php';
     </div>
     </div>
     
-    <!-- <script src="../js/index_script.js"></script> -->
-</body>
-</html>
