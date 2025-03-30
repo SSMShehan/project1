@@ -1,3 +1,27 @@
+<?php
+require_once '../config/db_config.php';
+
+// Start session
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION["id"])) {
+    header("location: login.php");
+    exit;
+}
+
+// Get logged-in user's ID
+$user_id = $_SESSION["id"];
+
+// Fetch the logged-in user's details
+$sql = "SELECT * FROM users WHERE id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,10 +47,12 @@
             <input type="text" class="search" placeholder="Search" />
             <button class="notif-btn">&#128276;</button>
             <div class="profile">
-                <span class="profile-icon">G</span>
+                <span class="profile-icon"><?php echo strtoupper(substr($user['username'], 0, 1)); ?></span>
                 <div>
-                    <strong>John Alex</strong><br>
-                    <small>Product manager</small>
+                    <strong>
+                    <?php echo htmlspecialchars($user['username']); ?>
+                    </strong><br>
+                    <small>Product Manager</small>
                 </div>
             </div>
         </div>
