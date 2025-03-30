@@ -27,7 +27,7 @@ include '../addphp/navbar.php';
         
 
         <!-- Orders Card -->
-        <a href="orders.php">
+        <a href="order.php">
             <div class="dashboard-card">
             <div class="card-icon2">
             <i class="fas fa-shopping-cart"></i>
