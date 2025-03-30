@@ -11,7 +11,7 @@ include '../addphp/navbar.php';
     <!-- Cards Grid -->
     <div class="cards-grid">
         <!-- Items Card -->
-            <a href="Items.php">
+            <a href="items.php">
                 <div class="dashboard-card">
                 
                     <div class="card-icon1">
