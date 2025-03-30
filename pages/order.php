@@ -2,25 +2,23 @@
 include '../addphp/navbar.php';
 require_once '../config/db_config.php';
 
-
-$sql_back_order_details = "SELECT * FROM back_order_details";
+$sql_order_details = "SELECT * FROM order_details";
 
 // Execute the query
-$result = $conn->query($sql_back_order_details);
-
+$result = $conn->query($sql_order_details);
 ?>
 
 
 <table id="inventoryTable">
                     <thead>
                         <tr>
-                            <th>Back Order Id</th>
-                            <th>Customer Id</th>
-                            <th>Item Id</th>
+                            <th>Order ID</th>
+                            <th>Customer ID</th>
+                            <th>Item ID</th>
+                            <th>Price</th>
                             <th>Quantity</th>
                             <th>Date Created</th>
                             <th>Date Updated</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,32 +26,31 @@ $result = $conn->query($sql_back_order_details);
         if ($result->num_rows > 0) {
             // Output data of each row
             while($row = $result->fetch_assoc()) {
+                // Determine status class based on the Status value
+                
                 echo "<tr>
-                    <td>".$row["Back_Order_ID"]."</td>
+                    <td>".$row["Order_ID"]."</td>
                     <td>".$row["Customer_ID"]."</td>
                     <td>".$row["Item_ID"]."</td>
+                    <td>$".number_format($row["Price"], 2)."</td>
                     <td>".$row["Quantity"]."</td>
                     <td>".$row["Date_created"]."</td>
                     <td>".($row["Date_updated"] ? $row["Date_updated"] : "NULL")."</td>
-                    <td>
-                        <button class='btn-edit'><i class='fas fa-edit'></i></button>
-                        <button class='btn-delete'><i class='fas fa-trash'></i></button>
-                    </td>
+                  
                 </tr>";
             }
         } else {
-            echo "<tr><td colspan='7'>No back orders found</td></tr>";
+            echo "<tr><td colspan='7'>No items found</td></tr>";
         }
         ?>
+    
+
                     </tbody>
                 </table>
 
 
 
 <?php
-
-// Close connection
-$conn->close();
-
 include '../addphp/footer.php';
+
 ?>
