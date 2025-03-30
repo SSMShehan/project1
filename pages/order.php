@@ -1,128 +1,59 @@
 <?php
 include '../addphp/navbar.php';
 require_once '../config/db_config.php';
+
+
+$sql_back_order_details = "SELECT * FROM back_order_details";
+
+// Execute the query
+$result = $conn->query($sql_back_order_details);
+
 ?>
 
 
 <table id="inventoryTable">
                     <thead>
                         <tr>
-                            <th>Item No</th>
-                            <th>Item Name</th>
-                            <th>Description</th>
-                            <th>Price</th>
-                            <th>Status</th>
+                            <th>Back Order Id</th>
+                            <th>Customer Id</th>
+                            <th>Item Id</th>
+                            <th>Quantity</th>
                             <th>Date Created</th>
+                            <th>Date Updated</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>T-Shirt</td>
-                            <td>Cotton, Size M</td>
-                            <td>$20</td>
-                            <td><span class="status in-stock">In Stock</span></td>
-                            <td>2024-10-01</td>
-                            <td>
-                                <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Jeans</td>
-                            <td>Denim, Size 32</td>
-                            <td>$45</td>
-                            <td><span class="status out-of-stock">Out of Stock</span></td>
-                            <td>2024-09-25</td>
-                            <td>
-                                <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>Jacket</td>
-                            <td>Leather, Size L</td>
-                            <td>$120</td>
-                            <td><span class="status in-stock">In Stock</span></td>
-                            <td>2024-10-05</td>
-                            <td>
-                                <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>4</td>
-                            <td>Dress</td>
-                            <td>Silk, Size S</td>
-                            <td>$60</td>
-                            <td><span class="status in-stock">In Stock</span></td>
-                            <td>2024-09-30</td>
-                            <td>
-                                <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>5</td>
-                            <td>Dress</td>
-                            <td>Silk, Size S</td>
-                            <td>$60</td>
-                            <td><span class="status in-stock">In Stock</span></td>
-                            <td>2024-09-30</td>
-                            <td>
-                                <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>6</td>
-                            <td>Dress</td>
-                            <td>Silk, Size S</td>
-                            <td>$60</td>
-                            <td><span class="status in-stock">In Stock</span></td>
-                            <td>2024-09-30</td>
-                            <td>
-                                <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>7</td>
-                            <td>Dress</td>
-                            <td>Silk, Size S</td>
-                            <td>$60</td>
-                            <td><span class="status in-stock">In Stock</span></td>
-                            <td>2024-09-30</td>
-                            <td>
-                                <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <td>8</td>
-                            <td>Dress</td>
-                            <td>Silk, Size S</td>
-                            <td>$60</td>
-                            <td><span class="status in-stock">In Stock</span></td>
-                            <td>2024-09-30</td>
-                            <td>
-                                <button class="btn-edit"><i class="fas fa-edit"></i></button>
-                                <button class="btn-delete"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
-
+                    <?php
+        if ($result->num_rows > 0) {
+            // Output data of each row
+            while($row = $result->fetch_assoc()) {
+                echo "<tr>
+                    <td>".$row["Back_Order_ID"]."</td>
+                    <td>".$row["Customer_ID"]."</td>
+                    <td>".$row["Item_ID"]."</td>
+                    <td>".$row["Quantity"]."</td>
+                    <td>".$row["Date_created"]."</td>
+                    <td>".($row["Date_updated"] ? $row["Date_updated"] : "NULL")."</td>
+                    <td>
+                        <button class='btn-edit'><i class='fas fa-edit'></i></button>
+                        <button class='btn-delete'><i class='fas fa-trash'></i></button>
+                    </td>
+                </tr>";
+            }
+        } else {
+            echo "<tr><td colspan='7'>No back orders found</td></tr>";
+        }
+        ?>
                     </tbody>
                 </table>
 
 
 
 <?php
+
+// Close connection
+$conn->close();
+
 include '../addphp/footer.php';
 ?>
