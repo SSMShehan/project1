@@ -37,7 +37,7 @@
         <aside class="sidebar">
             <nav>
                 <ul class="menu-items">
-                    <li class="active"><a href="#" ><i class="fas fa-dashboard"></i> Dashboard</a></li>
+                    <li class="active"><a href="../pages/Dashboard.php" ><i class="fas fa-dashboard"></i> Dashboard</a></li>
                     <li><a href="#"><i class="fa-solid fa-shirt"></i></i> Items</a></li>
                     <li><a href="#"><i class="fas fa-shopping-cart"></i> Orders</a></li>
                     <li><a href="#"><i class="fas fa-exchange-alt"></i> Backorders</a></li>
