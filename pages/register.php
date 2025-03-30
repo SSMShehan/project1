@@ -101,8 +101,9 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 <head>
     <meta charset="UTF-8">
     <title>Sign Up</title>
+    <link rel="stylesheet" href="../styles/login.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
+    <!-- <style>
         * {
             margin: 0;
             padding: 0;
@@ -192,11 +193,12 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         a:hover {
             text-decoration: underline;
         }
-    </style>
+    </style> -->
 </head>
 <body>
+<div class="content">
     <div class="wrapper">
-        <h2>Sign Up</h2>
+    <h1>MGS GARMENT</h1> <br><h2>Sign Up</h2>
         <p>Please fill this form to create an account.</p>
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>" method="post">
             <div class="form-group">
@@ -221,6 +223,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
             </div>
             <p>Already have an account? <a href="login.php">Login here</a>.</p>
         </form>
-    </div>    
+    </div>  
+</div>      
 </body>
 </html>

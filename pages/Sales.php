@@ -39,7 +39,7 @@ $result = $conn->query($sql_sales_list);
                     <td>".$row["Date"]."</td>
                     <td>
                         <button class='btn-edit'><i class='fas fa-edit'></i></button>
-                        <button class='btn-delete'><i class='fas fa-trash'></i></button>
+                        
                     </td>
                 </tr>";
             }
