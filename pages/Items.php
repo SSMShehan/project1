@@ -2,295 +2,488 @@
 include '../addphp/navbar.php';
 require_once '../config/db_config.php';
 
-// Handle item update request
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["updateItem"])) {
-    $itemID = $_POST["Item_ID"];
-    $name = $_POST["Name"];
-    $description = $_POST["Description"];
-    $cost = $_POST["Cost"];
-    $status = $_POST["Status"];
+// Initialize message variables
+$message = '';
+$messageType = ''; // 'success' or 'error'
 
-    $sql = "UPDATE item_details SET Name = ?, Description = ?, Cost = ?, Status = ? WHERE Item_ID = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('ssdsi', $name, $description, $cost, $status, $itemID);
+// Pagination setup
+$records_per_page = 5;
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($current_page < 1) $current_page = 1;
+$offset = ($current_page - 1) * $records_per_page;
 
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true]);
-    } else {
-        echo json_encode(["success" => false, "error" => $conn->error]);
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['create'])) {
+        // Handle item creation
+        $name = $_POST['Name'];
+        $description = $_POST['Description'];
+        $cost = $_POST['Cost'];
+        $status = $_POST['Status'];
+        
+        $sql = "INSERT INTO item_details (Name, Description, Cost, Status, Date_created, Date_updated) 
+                VALUES (?, ?, ?, ?, NOW(), NOW())";
+        
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param("ssds", $name, $description, $cost, $status);
+            if ($stmt->execute()) {
+                $message = 'Item created successfully!';
+                $messageType = 'success';
+                // Reset to first page after creation
+                $current_page = 1;
+                $offset = 0;
+            } else {
+                $message = 'Error creating item: ' . $stmt->error;
+                $messageType = 'error';
+            }
+            $stmt->close();
+        } else {
+            $message = 'Database error: ' . $conn->error;
+            $messageType = 'error';
+        }
+    } elseif (isset($_POST['update'])) {
+        // Handle item update
+        $itemID = $_POST['Item_ID'];
+        $name = $_POST['Name'];
+        $description = $_POST['Description'];
+        $cost = $_POST['Cost'];
+        $status = $_POST['Status'];
+        
+        $sql = "UPDATE item_details SET 
+                Name = ?, 
+                Description = ?, 
+                Cost = ?, 
+                Status = ?, 
+                Date_updated = NOW() 
+                WHERE Item_ID = ?";
+        
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param("ssdsi", $name, $description, $cost, $status, $itemID);
+            if ($stmt->execute()) {
+                $message = 'Item updated successfully!';
+                $messageType = 'success';
+            } else {
+                $message = 'Error updating item: ' . $stmt->error;
+                $messageType = 'error';
+            }
+            $stmt->close();
+        } else {
+            $message = 'Database error: ' . $conn->error;
+            $messageType = 'error';
+        }
     }
-
-    $stmt->close();
-    exit;
 }
 
-// Handle item delete request
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["deleteItem"])) {
-    $itemID = $_POST["Item_ID"];
+// Fetch total number of records
+$count_result = $conn->query("SELECT COUNT(*) AS total FROM item_details");
+$total_records = $count_result->fetch_assoc()['total'];
+$total_pages = ceil($total_records / $records_per_page);
 
-    $sql = "DELETE FROM item_details WHERE Item_ID = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $itemID);
-
-    if ($stmt->execute()) {
-        echo json_encode(["success" => true]);
-    } else {
-        echo json_encode(["success" => false, "error" => $conn->error]);
-    }
-
-    $stmt->close();
-    exit;
-}
-
-// Fetch item details
-$sql_item_details = "SELECT * FROM item_details";
+// Fetch paginated item details
+$sql_item_details = "SELECT * FROM item_details LIMIT $offset, $records_per_page";
 $result = $conn->query($sql_item_details);
 ?>
 
-<!-- The rest of your HTML code remains the same, including the table -->
+<!DOCTYPE html>
+<html>
 <head>
+    <meta charset="UTF-8">
+    <title>Item Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-       /* Modal Styling */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.3s ease-in-out;
-}
-
-.modal.show {
-    display: flex;
-    opacity: 1;
-}
-
-.modal-content {
-    background-color: #fff;
-    width: 50%;
-    max-width: 500px;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
-    position: relative;
-    transform: translateY(-20px);
-    transition: transform 0.3s ease-in-out;
-}
-
-.modal.show .modal-content {
-    transform: translateY(0);
-}
-
-/* Close Button */
-.close-btn {
-    position: absolute;
-    top: 12px;
-    right: 15px;
-    font-size: 22px;
-    font-weight: bold;
-    cursor: pointer;
-    color: #666;
-    transition: color 0.3s ease-in-out;
-}
-
-.close-btn:hover {
-    color: #000;
-}
-
-/* Form Styling */
-form {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-label {
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-}
-
-input, select {
-    width: 100%;
-    padding: 10px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    transition: all 0.3s ease-in-out;
-}
-
-input:focus, select:focus {
-    border-color: #007bff;
-    box-shadow: 0px 0px 5px rgba(0, 123, 255, 0.5);
-    outline: none;
-}
-
-/* Buttons */
-button {
-    padding: 12px;
-    font-size: 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-}
-
-button[type="submit"] {
-    background-color: #007bff;
-    color: white;
-}
-
-button[type="submit"]:hover {
-    background-color: #0056b3;
-}
-
-button#deleteItemBtn {
-    background-color:rgb(170, 64, 75);
-    color: white;
-    margin-top: 10px;
-}
-
-button#deleteItemBtn:hover {
-    background-color:rgb(255, 0, 25);
-}
-
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-create {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-create:hover {
+            background-color: #218838;
+        }
+        
+        .btn-edit {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-edit:hover {
+            background-color: #e0a800;
+        }
+        
+        .btn-submit {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-submit:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #5a6268;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: #fff;
+            width: 80%;
+            max-width: 500px;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            min-height: 100px;
+        }
+        
+        .message {
+            padding: 10px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .status {
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
+        .active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 5px;
+        }
+        
+        .pagination a, .pagination span {
+            padding: 8px 12px;
+            text-decoration: none;
+            border: 1px solid #ddd;
+            color: #333;
+            border-radius: 4px;
+        }
+        
+        .pagination a:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .pagination .active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+        
+        .pagination .disabled {
+            color: #aaa;
+            pointer-events: none;
+            cursor: default;
+        }
     </style>
 </head>
+<body>
 
-<table id="inventoryTable">
+<div class="header-container">
+    <h2>Item Management</h2>
+    <button class="btn btn-create" onclick="document.getElementById('createModal').style.display='flex'">
+        <i class="fas fa-plus"></i> Create New Item
+    </button>
+</div>
+
+<?php if ($message): ?>
+    <div class="message <?php echo $messageType; ?>">
+        <?php echo htmlspecialchars($message); ?>
+    </div>
+<?php endif; ?>
+
+<table>
     <thead>
         <tr>
-            <th>Item No</th>
-            <th>Item Name</th>
+            <th>Item ID</th>
+            <th>Name</th>
             <th>Description</th>
             <th>Price</th>
             <th>Status</th>
             <th>Date Created</th>
+            <th>Date Updated</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        <?php while ($row = $result->fetch_assoc()) : ?>
-        <tr data-id="<?= $row["Item_ID"] ?>">
-            <td><?= $row["Item_ID"] ?></td>
-            <td><?= $row["Name"] ?></td>
-            <td><?= $row["Description"] ?></td>
-            <td><?= $row["Cost"] ?></td>
-            <td><span class='status <?= strtolower($row["Status"]) === 'active' ? 'in-stock' : 'out-of-stock' ?>'><?= $row["Status"] ?></span></td>
-            <td><?= $row["Date_created"] ?></td>
-            <td>
-                <button class='btn-edit'><i class='fas fa-edit'></i></button>
-            </td>
-        </tr>
-        <?php endwhile; ?>
+        <?php if ($result->num_rows > 0): ?>
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($row['Item_ID']); ?></td>
+                    <td><?php echo htmlspecialchars($row['Name']); ?></td>
+                    <td><?php echo htmlspecialchars($row['Description']); ?></td>
+                    <td>$<?php echo number_format($row['Cost'], 2); ?></td>
+                    <td><span class="status <?php echo strtolower($row['Status']); ?>"><?php echo htmlspecialchars($row['Status']); ?></span></td>
+                    <td><?php echo htmlspecialchars($row['Date_created']); ?></td>
+                    <td><?php echo $row['Date_updated'] ? htmlspecialchars($row['Date_updated']) : 'NULL'; ?></td>
+                    <td class="action-buttons">
+                        <button class="btn btn-edit" onclick="openEditModal(
+                            '<?php echo $row['Item_ID']; ?>',
+                            '<?php echo htmlspecialchars($row['Name'], ENT_QUOTES); ?>',
+                            '<?php echo htmlspecialchars($row['Description'], ENT_QUOTES); ?>',
+                            '<?php echo $row['Cost']; ?>',
+                            '<?php echo $row['Status']; ?>'
+                        )">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                    </td>
+                </tr>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <tr>
+                <td colspan="8">No items found</td>
+            </tr>
+        <?php endif; ?>
     </tbody>
 </table>
 
-<!-- Edit Modal with Delete Button -->
+<!-- Pagination Navigation -->
+<div class="pagination">
+    <?php if ($current_page > 1): ?>
+        <a href="?page=1">&laquo; First</a>
+        <a href="?page=<?php echo $current_page - 1; ?>">&lsaquo; Prev</a>
+    <?php else: ?>
+        <span class="disabled">&laquo; First</span>
+        <span class="disabled">&lsaquo; Prev</span>
+    <?php endif; ?>
+    
+    <?php
+    // Show page numbers (limited to 5 around current page)
+    $start_page = max(1, $current_page - 2);
+    $end_page = min($total_pages, $current_page + 2);
+    
+    if ($start_page > 1) {
+        echo '<span>...</span>';
+    }
+    
+    for ($i = $start_page; $i <= $end_page; $i++): ?>
+        <a href="?page=<?php echo $i; ?>" <?php echo ($i == $current_page) ? 'class="active"' : ''; ?>>
+            <?php echo $i; ?>
+        </a>
+    <?php endfor;
+    
+    if ($end_page < $total_pages) {
+        echo '<span>...</span>';
+    }
+    ?>
+    
+    <?php if ($current_page < $total_pages): ?>
+        <a href="?page=<?php echo $current_page + 1; ?>">Next &rsaquo;</a>
+        <a href="?page=<?php echo $total_pages; ?>">Last &raquo;</a>
+    <?php else: ?>
+        <span class="disabled">Next &rsaquo;</span>
+        <span class="disabled">Last &raquo;</span>
+    <?php endif; ?>
+</div>
+
+<!-- Create Modal -->
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <h3>Create New Item</h3>
+        <form method="POST" action="">
+            <input type="hidden" name="create" value="1">
+            
+            <div class="form-group">
+                <label for="createName">Name:</label>
+                <input type="text" id="createName" name="Name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="createDescription">Description:</label>
+                <textarea id="createDescription" name="Description"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="createCost">Price:</label>
+                <input type="number" id="createCost" name="Cost" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="createStatus">Status:</label>
+                <select id="createStatus" name="Status" required>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+            </div>
+            
+            <div class="form-group action-buttons">
+                <button type="submit" class="btn btn-submit">Create</button>
+                <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal -->
 <div id="editModal" class="modal">
     <div class="modal-content">
-        <span class="close-btn">&times;</span>
-        <h2>Edit Item</h2>
-        <form id="editForm">
+        <h3>Edit Item</h3>
+        <form method="POST" action="">
+            <input type="hidden" name="update" value="1">
             <input type="hidden" id="editItemID" name="Item_ID">
-            <label for="editItemName">Item Name:</label>
-            <input type="text" id="editItemName" name="Name">
-            <label for="editItemDescription">Description:</label>
-            <input type="text" id="editItemDescription" name="Description">
-            <label for="editItemCost">Price:</label>
-            <input type="text" id="editItemCost" name="Cost">
-            <label for="editItemStatus">Status:</label>
-            <select id="editItemStatus" name="Status">
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-            </select>
-            <button type="submit">Update</button>
-            <button type="button" id="deleteItemBtn" >Delete</button>
+            
+            <div class="form-group">
+                <label for="editName">Name:</label>
+                <input type="text" id="editName" name="Name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editDescription">Description:</label>
+                <textarea id="editDescription" name="Description"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="editCost">Price:</label>
+                <input type="number" id="editCost" name="Cost" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editStatus">Status:</label>
+                <select id="editStatus" name="Status" required>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                </select>
+            </div>
+            
+            <div class="form-group action-buttons">
+                <button type="submit" class="btn btn-submit">Update</button>
+                <button type="button" class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
         </form>
     </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const modal = document.getElementById("editModal");
-    const closeModalBtn = document.querySelector(".close-btn");
-    const editForm = document.getElementById("editForm");
-    const deleteItemBtn = document.getElementById("deleteItemBtn");
+// Function to open edit modal with data
+function openEditModal(itemId, name, description, cost, status) {
+    document.getElementById('editItemID').value = itemId;
+    document.getElementById('editName').value = name;
+    document.getElementById('editDescription').value = description;
+    document.getElementById('editCost').value = cost;
+    document.getElementById('editStatus').value = status;
+    document.getElementById('editModal').style.display = 'flex';
+}
 
-    // Edit item handler
-    document.querySelectorAll('.btn-edit').forEach(button => {
-        button.addEventListener('click', function () {
-            const row = this.closest('tr');
-            document.getElementById("editItemID").value = row.dataset.id;
-            document.getElementById("editItemName").value = row.cells[1].textContent;
-            document.getElementById("editItemDescription").value = row.cells[2].textContent;
-            document.getElementById("editItemCost").value = row.cells[3].textContent;
-            document.getElementById("editItemStatus").value = row.cells[4].textContent.trim().toLowerCase();
-            modal.classList.add("show");
-        });
+// Function to close any modal
+function closeModal() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.style.display = 'none';
     });
+}
 
-    closeModalBtn.addEventListener("click", () => { modal.classList.remove("show"); });
-
-    // Edit form submission handler
-    editForm.addEventListener("submit", function (event) {
-        event.preventDefault();
-        const formData = new FormData(editForm);
-        formData.append("updateItem", true);
-
-        fetch("items.php", { method: "POST", body: formData })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const row = document.querySelector(`tr[data-id='${formData.get("Item_ID")}'`);
-                row.cells[1].textContent = formData.get("Name");
-                row.cells[2].textContent = formData.get("Description");
-                row.cells[3].textContent = formData.get("Cost");
-                row.cells[4].innerHTML = `<span class='status ${formData.get("Status") === "active" ? "in-stock" : "out-of-stock"}'>${formData.get("Status")}</span>`;
-                modal.classList.remove("show");
-            } else {
-                alert("Failed to update the item: " + data.error);
-            }
-        })
-        .catch(error => console.error("Error:", error));
-    });
-
-    // Delete item handler inside the modal
-    deleteItemBtn.addEventListener('click', function () {
-        const itemId = document.getElementById("editItemID").value;
-
-        // Send the delete request via AJAX
-        fetch("items.php", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ deleteItem: true, itemID: itemId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Close the modal
-                modal.classList.remove("show");
-                // Remove the item row from the table
-                const row = document.querySelector(`tr[data-id='${itemId}']`);
-                row.remove();
-            } else {
-                alert("Failed to delete the item: " + data.error);
-            }
-        })
-        .catch(error => console.error("Error:", error));
-    });
-});
-
-
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    if (event.target.className === 'modal') {
+        closeModal();
+    }
+}
 </script>
 
-<?php
-include '../addphp/footer.php';
+<?php 
+$conn->close();
 ?>

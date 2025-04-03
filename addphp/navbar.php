@@ -1,6 +1,14 @@
 <?php
 require_once '../config/db_config.php';
 
+$sqlforname = "SELECT system_short_name FROM system_settings WHERE id = 1";
+$resultforname = $conn->query($sqlforname);
+
+if ($resultforname && $resultforname->num_rows > 0) {
+    $row = $resultforname->fetch_assoc();
+    $companyName = $row['system_short_name'];
+}
+
 // Start session
 session_start();
 
@@ -37,7 +45,7 @@ $user = $result->fetch_assoc();
         <div class="left-section">
             <div class="logo">
                 <span class="logo-icon">G</span>
-                <span class="logo-text">MGS Garment</span>
+                <span class="logo-text"><?php echo htmlspecialchars($companyName); ?></span>
             </div>
             <button class="back-btn">&#8592;</button>
             <h1 class="dboard">Dashboard</h1>
