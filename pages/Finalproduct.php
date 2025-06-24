@@ -26,25 +26,63 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $message = 'Error: Item ID does not exist';
             $messageType = 'error';
         } else {
-            $sql = "INSERT INTO final_product_details (Item_ID, Quantity, unit, type, Date_created, Date_updated) 
-                    VALUES (?, ?, ?, ?, NOW(), NOW())";
+            // Start transaction
+            $conn->begin_transaction();
             
-            $stmt = $conn->prepare($sql);
-            if ($stmt) {
-                $stmt->bind_param("isss", $itemID, $quantity, $unit, $type);
-                if ($stmt->execute()) {
-                    $message = 'Final product created successfully!';
-                    $messageType = 'success';
-                    // Reset to first page after creation
-                    $current_page = 1;
-                    $offset = 0;
+            try {
+                // Insert into final_product_details
+                $sql = "INSERT INTO final_product_details (Item_ID, Quantity, unit, type, Date_created, Date_updated) 
+                        VALUES (?, ?, ?, ?, NOW(), NOW())";
+                
+                $stmt = $conn->prepare($sql);
+                if ($stmt) {
+                    $stmt->bind_param("isss", $itemID, $quantity, $unit, $type);
+                    if ($stmt->execute()) {
+                        // Check if stock exists for this item
+                        $stockCheck = $conn->prepare("SELECT Stock_ID FROM stock_details WHERE Item_ID = ?");
+                        $stockCheck->bind_param("i", $itemID);
+                        $stockCheck->execute();
+                        $stockCheck->store_result();
+                        
+                        if ($stockCheck->num_rows > 0) {
+                            // Update existing stock
+                            $updateStock = $conn->prepare("UPDATE stock_details SET 
+                                Quantity = Quantity + ?, 
+                                unit = ?,
+                                type = ?,
+                                Date_updated = NOW()
+                                WHERE Item_ID = ?");
+                            $updateStock->bind_param("issi", $quantity, $unit, $type, $itemID);
+                            $updateStock->execute();
+                            $updateStock->close();
+                        } else {
+                            // Create new stock record
+                            $insertStock = $conn->prepare("INSERT INTO stock_details 
+                                (Item_ID, Quantity, unit, type, Date_created, Date_updated)
+                                VALUES (?, ?, ?, ?, NOW(), NOW())");
+                            $insertStock->bind_param("isss", $itemID, $quantity, $unit, $type);
+                            $insertStock->execute();
+                            $insertStock->close();
+                        }
+                        
+                        $stockCheck->close();
+                        
+                        $conn->commit();
+                        $message = 'Final product created and stock updated successfully!';
+                        $messageType = 'success';
+                        // Reset to first page after creation
+                        $current_page = 1;
+                        $offset = 0;
+                    } else {
+                        throw new Exception('Error creating final product: ' . $stmt->error);
+                    }
+                    $stmt->close();
                 } else {
-                    $message = 'Error creating final product: ' . $stmt->error;
-                    $messageType = 'error';
+                    throw new Exception('Database error: ' . $conn->error);
                 }
-                $stmt->close();
-            } else {
-                $message = 'Database error: ' . $conn->error;
+            } catch (Exception $e) {
+                $conn->rollback();
+                $message = $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -52,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Handle final product update
         $productID = $_POST['Product_ID'];
         $itemID = $_POST['Item_ID'];
-        $quantity = $_POST['Quantity'];
+        $newQuantity = $_POST['Quantity'];
         $unit = $_POST['unit'];
         $type = $_POST['type'];
         
@@ -61,27 +99,71 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $message = 'Error: Item ID does not exist';
             $messageType = 'error';
         } else {
-            $sql = "UPDATE final_product_details SET 
-                    Item_ID = ?, 
-                    Quantity = ?, 
-                    unit = ?, 
-                    type = ?, 
-                    Date_updated = NOW() 
-                    WHERE Product_ID = ?";
+            // Start transaction
+            $conn->begin_transaction();
             
-            $stmt = $conn->prepare($sql);
-            if ($stmt) {
-                $stmt->bind_param("isssi", $itemID, $quantity, $unit, $type, $productID);
-                if ($stmt->execute()) {
-                    $message = 'Final product updated successfully!';
-                    $messageType = 'success';
+            try {
+                // First get the current quantity to calculate difference
+                $getCurrentQty = $conn->prepare("SELECT Quantity FROM final_product_details WHERE Product_ID = ?");
+                $getCurrentQty->bind_param("i", $productID);
+                $getCurrentQty->execute();
+                $result = $getCurrentQty->get_result();
+                $currentRow = $result->fetch_assoc();
+                $currentQuantity = $currentRow['Quantity'];
+                $getCurrentQty->close();
+                
+                $quantityDifference = $newQuantity - $currentQuantity;
+                
+                // Update final product
+                $sql = "UPDATE final_product_details SET 
+                        Item_ID = ?, 
+                        Quantity = ?, 
+                        unit = ?, 
+                        type = ?, 
+                        Date_updated = NOW() 
+                        WHERE Product_ID = ?";
+                
+                $stmt = $conn->prepare($sql);
+                if ($stmt) {
+                    $stmt->bind_param("isssi", $itemID, $newQuantity, $unit, $type, $productID);
+                    if ($stmt->execute()) {
+                        // Update stock quantity (add the difference)
+                        $updateStock = $conn->prepare("UPDATE stock_details SET 
+                            Quantity = Quantity + ?, 
+                            unit = ?,
+                            type = ?,
+                            Date_updated = NOW()
+                            WHERE Item_ID = ?");
+                        $updateStock->bind_param("issi", $quantityDifference, $unit, $type, $itemID);
+                        
+                        if ($updateStock->execute()) {
+                            if ($updateStock->affected_rows == 0) {
+                                // No stock record exists, create one
+                                $insertStock = $conn->prepare("INSERT INTO stock_details 
+                                    (Item_ID, Quantity, unit, type, Date_created, Date_updated)
+                                    VALUES (?, ?, ?, ?, NOW(), NOW())");
+                                $insertStock->bind_param("isss", $itemID, $newQuantity, $unit, $type);
+                                $insertStock->execute();
+                                $insertStock->close();
+                            }
+                            $updateStock->close();
+                            
+                            $conn->commit();
+                            $message = 'Final product and stock updated successfully!';
+                            $messageType = 'success';
+                        } else {
+                            throw new Exception('Error updating stock: ' . $updateStock->error);
+                        }
+                    } else {
+                        throw new Exception('Error updating final product: ' . $stmt->error);
+                    }
+                    $stmt->close();
                 } else {
-                    $message = 'Error updating final product: ' . $stmt->error;
-                    $messageType = 'error';
+                    throw new Exception('Database error: ' . $conn->error);
                 }
-                $stmt->close();
-            } else {
-                $message = 'Database error: ' . $conn->error;
+            } catch (Exception $e) {
+                $conn->rollback();
+                $message = $e->getMessage();
                 $messageType = 'error';
             }
         }

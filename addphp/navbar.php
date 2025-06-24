@@ -30,6 +30,7 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 ?>
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -55,10 +56,10 @@ $user = $result->fetch_assoc();
             <input type="text" class="search" placeholder="Search" />
             <button class="notif-btn">&#128276;</button>
             <div class="profile">
-                <span class="profile-icon"><?php echo strtoupper(substr($user['username'], 0, 1)); ?></span>
+               <!-- <span class="profile-icon"><?php echo strtoupper(substr($user['username'], 0, 1)); ?></span> 
                 <div>
                     <strong>
-                    <?php echo htmlspecialchars($user['username']); ?>
+                    <?php echo htmlspecialchars($user['username']); ?> -->
                     </strong><br>
                     <small>Product Manager</small>
                 </div>
@@ -80,7 +81,7 @@ $user = $result->fetch_assoc();
                     <li><a href="Receiveorders.php"><i class="fas fa-truck"></i> Receive orders</a></li>
                     <li><a href="Finalproduct.php"><i class="fa-solid fa-check-to-slot"></i> Final product</a></li>
                     <li><a href="Sales.php"><i class="fas fa-chart-line"></i> Sales</a></li>
-                    <li><a href="Users.php"><i class="fas fa-users"></i> Users</a></li>
+                    <!-- <li><a href="Users.php"><i class="fas fa-users"></i> Users</a></li> -->
                     <li><a href="Setting.php"><i class="fas fa-cog"></i> Setting</a></li>
                     <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Log out</a></li>
 

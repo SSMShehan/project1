@@ -26,25 +26,55 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $message = 'Error: Item ID does not exist';
             $messageType = 'error';
         } else {
-            $sql = "INSERT INTO stock_details (Item_ID, Quantity, unit, type, Date_created, Date_updated) 
-                    VALUES (?, ?, ?, ?, NOW(), NOW())";
+            // Start transaction
+            $conn->begin_transaction();
             
-            $stmt = $conn->prepare($sql);
-            if ($stmt) {
-                $stmt->bind_param("isss", $itemID, $quantity, $unit, $type);
-                if ($stmt->execute()) {
-                    $message = 'Stock record created successfully!';
-                    $messageType = 'success';
-                    // Reset to first page after creation
-                    $current_page = 1;
-                    $offset = 0;
+            try {
+                // Insert into stock_details
+                $sql = "INSERT INTO stock_details (Item_ID, Quantity, unit, type, Date_created, Date_updated) 
+                        VALUES (?, ?, ?, ?, NOW(), NOW())";
+                
+                $stmt = $conn->prepare($sql);
+                if ($stmt) {
+                    $stmt->bind_param("isss", $itemID, $quantity, $unit, $type);
+                    if ($stmt->execute()) {
+                        // Check if final product exists for this item
+                        $finalCheck = $conn->prepare("SELECT Product_ID FROM final_product_details WHERE Item_ID = ?");
+                        $finalCheck->bind_param("i", $itemID);
+                        $finalCheck->execute();
+                        $finalCheck->store_result();
+                        
+                        if ($finalCheck->num_rows > 0) {
+                            // Update existing final product
+                            $updateFinal = $conn->prepare("UPDATE final_product_details SET 
+                                Quantity = Quantity + ?, 
+                                unit = ?,
+                                type = ?,
+                                Date_updated = NOW()
+                                WHERE Item_ID = ?");
+                            $updateFinal->bind_param("issi", $quantity, $unit, $type, $itemID);
+                            $updateFinal->execute();
+                            $updateFinal->close();
+                        }
+                        
+                        $finalCheck->close();
+                        
+                        $conn->commit();
+                        $message = 'Stock record created and final product updated successfully!';
+                        $messageType = 'success';
+                        // Reset to first page after creation
+                        $current_page = 1;
+                        $offset = 0;
+                    } else {
+                        throw new Exception('Error creating stock record: ' . $stmt->error);
+                    }
+                    $stmt->close();
                 } else {
-                    $message = 'Error creating stock record: ' . $stmt->error;
-                    $messageType = 'error';
+                    throw new Exception('Database error: ' . $conn->error);
                 }
-                $stmt->close();
-            } else {
-                $message = 'Database error: ' . $conn->error;
+            } catch (Exception $e) {
+                $conn->rollback();
+                $message = $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -52,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Handle stock update
         $stockID = $_POST['Stock_ID'];
         $itemID = $_POST['Item_ID'];
-        $quantity = $_POST['Quantity'];
+        $newQuantity = $_POST['Quantity'];
         $unit = $_POST['Unit'];
         $type = $_POST['Type'];
         
@@ -61,27 +91,62 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $message = 'Error: Item ID does not exist';
             $messageType = 'error';
         } else {
-            $sql = "UPDATE stock_details SET 
-                    Item_ID = ?, 
-                    Quantity = ?, 
-                    unit = ?, 
-                    type = ?, 
-                    Date_updated = NOW() 
-                    WHERE Stock_ID = ?";
+            // Start transaction
+            $conn->begin_transaction();
             
-            $stmt = $conn->prepare($sql);
-            if ($stmt) {
-                $stmt->bind_param("isssi", $itemID, $quantity, $unit, $type, $stockID);
-                if ($stmt->execute()) {
-                    $message = 'Stock record updated successfully!';
-                    $messageType = 'success';
+            try {
+                // First get the current quantity to calculate difference
+                $getCurrentQty = $conn->prepare("SELECT Quantity FROM stock_details WHERE Stock_ID = ?");
+                $getCurrentQty->bind_param("i", $stockID);
+                $getCurrentQty->execute();
+                $result = $getCurrentQty->get_result();
+                $currentRow = $result->fetch_assoc();
+                $currentQuantity = $currentRow['Quantity'];
+                $getCurrentQty->close();
+                
+                $quantityDifference = $newQuantity - $currentQuantity;
+                
+                // Update stock
+                $sql = "UPDATE stock_details SET 
+                        Item_ID = ?, 
+                        Quantity = ?, 
+                        unit = ?, 
+                        type = ?, 
+                        Date_updated = NOW() 
+                        WHERE Stock_ID = ?";
+                
+                $stmt = $conn->prepare($sql);
+                if ($stmt) {
+                    $stmt->bind_param("isssi", $itemID, $newQuantity, $unit, $type, $stockID);
+                    if ($stmt->execute()) {
+                      
+                   
+                        // Update final product quantity (add the difference)
+                 /*       $updateFinal = $conn->prepare("UPDATE final_product_details SET 
+                            Quantity = Quantity + ?, 
+                            unit = ?,
+                            type = ?,
+                            Date_updated = NOW()
+                            WHERE Item_ID = ?");
+                        $updateFinal->bind_param("issi", $quantityDifference, $unit, $type, $itemID);
+               */         
+                       
+    
+                            
+                            $conn->commit();
+                            $message = 'Stock updated successfully!';
+                            $messageType = 'success';
+                        
+                    } else {
+                        throw new Exception('Error updating stock record: ' . $stmt->error);
+                    }
+                    $stmt->close();
                 } else {
-                    $message = 'Error updating stock record: ' . $stmt->error;
-                    $messageType = 'error';
+                    throw new Exception('Database error: ' . $conn->error);
                 }
-                $stmt->close();
-            } else {
-                $message = 'Database error: ' . $conn->error;
+            } catch (Exception $e) {
+                $conn->rollback();
+                $message = $e->getMessage();
                 $messageType = 'error';
             }
         }

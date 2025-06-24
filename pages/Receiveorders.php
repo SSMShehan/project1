@@ -16,19 +16,23 @@ $offset = ($current_page - 1) * $records_per_page;
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['create'])) {
         // Handle receiving order creation
-        $formID = $_POST['form_ID'] ?? '';
-        $formOrder = $_POST['form_order'] ?? '';
-        $amount = $_POST['Amount'] ?? 0;
+        $formID = $_POST['form_ID'];
+        $supplierID = $_POST['Supplier_ID'];
+        $quantity = $_POST['Quantity'];
+        $unitPrice = $_POST['Unit_price'];
         $discount = $_POST['Discount'] ?? 0;
         $tax = $_POST['Tax'] ?? 0;
         
-
-        $sql = "INSERT INTO receiving_order_details (form_ID, form_order, Amount, Discount, Tax, Date_created, Date_updated) 
-                VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
+        // Calculate amount
+        $amount = ($unitPrice * $quantity) + $tax - $discount;
+        
+        $sql = "INSERT INTO receiving_order_details 
+                (form_ID, Supplier_ID, Quantity, Unit_price, Discount, Tax, Amount, Date_created, Date_updated) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
         
         $stmt = $conn->prepare($sql);
         if ($stmt) {
-            $stmt->bind_param("ssddd", $formID, $formOrder, $amount, $discount, $tax);
+            $stmt->bind_param("siidddd", $formID, $supplierID, $quantity, $unitPrice, $discount, $tax, $amount);
             if ($stmt->execute()) {
                 $message = 'Receiving order created successfully!';
                 $messageType = 'success';
@@ -46,25 +50,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     } elseif (isset($_POST['update'])) {
         // Handle receiving order update
-        $receivingOrderID = $_POST['Receiving_Order_ID'] ?? 0;
-        $formID = $_POST['form_ID'] ?? '';
-        $formOrder = $_POST['form_order'] ?? '';
-        $amount = $_POST['Amount'] ?? 0;
+        $receivingOrderID = $_POST['Receiving_Order_ID'];
+        $formID = $_POST['form_ID'];
+        $supplierID = $_POST['Supplier_ID'];
+        $quantity = $_POST['Quantity'];
+        $unitPrice = $_POST['Unit_price'];
         $discount = $_POST['Discount'] ?? 0;
         $tax = $_POST['Tax'] ?? 0;
         
+        // Calculate new amount
+        $amount = ($unitPrice * $quantity) + $tax - $discount;
+        
         $sql = "UPDATE receiving_order_details SET 
                 form_ID = ?, 
-                form_order = ?, 
-                Amount = ?, 
+                Supplier_ID = ?, 
+                Quantity = ?,
+                Unit_price = ?,
                 Discount = ?, 
                 Tax = ?, 
+                Amount = ?,
                 Date_updated = NOW() 
                 WHERE Receiving_Order_ID = ?";
         
         $stmt = $conn->prepare($sql);
         if ($stmt) {
-            $stmt->bind_param("ssdddi", $formID, $formOrder, $amount, $discount, $tax, $receivingOrderID);
+            $stmt->bind_param("siiddddi", $formID, $supplierID, $quantity, $unitPrice, $discount, $tax, $amount, $receivingOrderID);
             if ($stmt->execute()) {
                 $message = 'Receiving order updated successfully!';
                 $messageType = 'success';
@@ -82,24 +92,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Fetch total number of records
 $count_result = $conn->query("SELECT COUNT(*) AS total FROM receiving_order_details");
-$total_records = $count_result ? $count_result->fetch_assoc()['total'] : 0;
+$total_records = $count_result->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $records_per_page);
 
-// Fetch paginated receiving order details
-$sql_receiving_order_details = "SELECT * FROM receiving_order_details LIMIT ?, ?";
-$stmt = $conn->prepare($sql_receiving_order_details);
-$result = null;
+// Fetch paginated receiving order details with supplier names
+$sql_receiving_order_details = "SELECT rod.*, sd.Names AS Supplier_Name 
+                               FROM receiving_order_details rod
+                               LEFT JOIN supplier_details sd ON rod.Supplier_ID = sd.Supplier_ID
+                               LIMIT $offset, $records_per_page";
+$result = $conn->query($sql_receiving_order_details);
 
-if ($stmt) {
-    $stmt->bind_param("ii", $offset, $records_per_page);
-    $stmt->execute();
-    $result = $stmt->get_result();
-} else {
-    $message = 'Database error: ' . $conn->error;
-    $messageType = 'error';
-}
+// Fetch suppliers for dropdown
+$suppliers = $conn->query("SELECT Supplier_ID, Names FROM supplier_details");
 ?>
-
 
 <!DOCTYPE html>
 <html>
@@ -296,35 +301,40 @@ if ($stmt) {
         <tr>
             <th>Receiving Order ID</th>
             <th>Form ID</th>
-            <th>Form Order</th>
-            <th>Amount</th>
+            <th>Supplier</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
             <th>Discount</th>
             <th>Tax</th>
+            <th>Amount</th>
             <th>Date Created</th>
             <th>Date Updated</th>
             <th>Actions</th>
         </tr>
     </thead>
     <tbody>
-        <?php if ($result && $result->num_rows > 0): ?>
+        <?php if ($result->num_rows > 0): ?>
             <?php while ($row = $result->fetch_assoc()): ?>
                 <tr>
-                    <td><?php echo htmlspecialchars($row['Receiving_Order_ID'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($row['form_ID'] ?? ''); ?></td>
-                    <td><?php echo htmlspecialchars($row['form_order'] ?? ''); ?></td>
-                    <td>$<?php echo isset($row['Amount']) ? number_format($row['Amount'], 2) : '0.00'; ?></td>
-                    <td><?php echo isset($row['Discount']) ? htmlspecialchars($row['Discount']) : '0'; ?>%</td>
-                    <td><?php echo isset($row['Tax']) ? htmlspecialchars($row['Tax']) : '0'; ?>%</td>
-                    <td><?php echo htmlspecialchars($row['Date_created'] ?? 'N/A'); ?></td>
+                    <td><?php echo htmlspecialchars($row['Receiving_Order_ID']); ?></td>
+                    <td><?php echo htmlspecialchars($row['form_ID']); ?></td>
+                    <td><?php echo htmlspecialchars($row['Supplier_Name']); ?></td>
+                    <td><?php echo htmlspecialchars($row['Quantity']); ?></td>
+                    <td>Rs <?php echo number_format($row['Unit_price'], 2); ?></td>
+                    <td>Rs <?php echo number_format($row['Discount'], 2); ?></td>
+                    <td>Rs <?php echo number_format($row['Tax'], 2); ?></td>
+                    <td>Rs <?php echo number_format($row['Amount'], 2); ?></td>
+                    <td><?php echo htmlspecialchars($row['Date_created']); ?></td>
                     <td><?php echo !empty($row['Date_updated']) ? htmlspecialchars($row['Date_updated']) : 'N/A'; ?></td>
                     <td class="action-buttons">
                         <button class="btn btn-edit" onclick="openEditModal(
-                            '<?php echo $row['Receiving_Order_ID'] ?? ''; ?>',
-                            '<?php echo isset($row['form_ID']) ? htmlspecialchars($row['form_ID'], ENT_QUOTES) : ''; ?>',
-                            '<?php echo isset($row['form_order']) ? htmlspecialchars($row['form_order'], ENT_QUOTES) : ''; ?>',
-                            '<?php echo $row['Amount'] ?? 0; ?>',
-                            '<?php echo $row['Discount'] ?? 0; ?>',
-                            '<?php echo $row['Tax'] ?? 0; ?>'
+                            '<?php echo $row['Receiving_Order_ID']; ?>',
+                            '<?php echo htmlspecialchars($row['form_ID'], ENT_QUOTES); ?>',
+                            '<?php echo $row['Supplier_ID']; ?>',
+                            '<?php echo $row['Quantity']; ?>',
+                            '<?php echo $row['Unit_price']; ?>',
+                            '<?php echo $row['Discount']; ?>',
+                            '<?php echo $row['Tax']; ?>'
                         )">
                             <i class="fas fa-edit"></i> Edit
                         </button>
@@ -333,7 +343,7 @@ if ($stmt) {
             <?php endwhile; ?>
         <?php else: ?>
             <tr>
-                <td colspan="9">No receiving orders found</td>
+                <td colspan="11">No receiving orders found</td>
             </tr>
         <?php endif; ?>
     </tbody>
@@ -378,7 +388,6 @@ if ($stmt) {
     <?php endif; ?>
 </div>
 
-
 <!-- Create Modal -->
 <div id="createModal" class="modal">
     <div class="modal-content">
@@ -392,22 +401,33 @@ if ($stmt) {
             </div>
             
             <div class="form-group">
-                <label for="createFormOrder">Form Order:</label>
-                <input type="text" id="createFormOrder" name="form_order" required>
+                <label for="createSupplierID">Supplier:</label>
+                <select id="createSupplierID" name="Supplier_ID" required>
+                    <?php while ($supplier = $suppliers->fetch_assoc()): ?>
+                        <option value="<?php echo $supplier['Supplier_ID']; ?>">
+                            <?php echo htmlspecialchars($supplier['Names']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
             </div>
             
             <div class="form-group">
-                <label for="createAmount">Amount:</label>
-                <input type="number" id="createAmount" name="Amount" step="0.01" required>
+                <label for="createQuantity">Quantity:</label>
+                <input type="number" id="createQuantity" name="Quantity" required>
             </div>
             
             <div class="form-group">
-                <label for="createDiscount">Discount (%):</label>
+                <label for="createUnitPrice">Unit Price:</label>
+                <input type="number" id="createUnitPrice" name="Unit_price" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="createDiscount">Discount (Rs):</label>
                 <input type="number" id="createDiscount" name="Discount" step="0.01">
             </div>
             
             <div class="form-group">
-                <label for="createTax">Tax (%):</label>
+                <label for="createTax">Tax (Rs):</label>
                 <input type="number" id="createTax" name="Tax" step="0.01">
             </div>
             
@@ -433,25 +453,37 @@ if ($stmt) {
             </div>
             
             <div class="form-group">
-                <label for="editFormOrder">Form Order:</label>
-                <input type="text" id="editFormOrder" name="form_order" required>
+                <label for="editSupplierID">Supplier:</label>
+                <select id="editSupplierID" name="Supplier_ID" required>
+                    <?php 
+                    $suppliers->data_seek(0);
+                    while ($supplier = $suppliers->fetch_assoc()): ?>
+                        <option value="<?php echo $supplier['Supplier_ID']; ?>">
+                            <?php echo htmlspecialchars($supplier['Names']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
             </div>
             
             <div class="form-group">
-                <label for="editAmount">Amount:</label>
-                <input type="number" id="editAmount" name="Amount" step="0.01" required>
+                <label for="editQuantity">Quantity:</label>
+                <input type="number" id="editQuantity" name="Quantity" required>
             </div>
             
             <div class="form-group">
-                <label for="editDiscount">Discount (%):</label>
+                <label for="editUnitPrice">Unit Price:</label>
+                <input type="number" id="editUnitPrice" name="Unit_price" step="0.01" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="editDiscount">Discount (Rs):</label>
                 <input type="number" id="editDiscount" name="Discount" step="0.01">
             </div>
             
             <div class="form-group">
-                <label for="editTax">Tax (%):</label>
+                <label for="editTax">Tax (Rs):</label>
                 <input type="number" id="editTax" name="Tax" step="0.01">
             </div>
-            
             
             <div class="form-group action-buttons">
                 <button type="submit" class="btn btn-submit">Update</button>
@@ -463,11 +495,12 @@ if ($stmt) {
 
 <script>
 // Function to open edit modal with data
-function openEditModal(receivingOrderId, formId, formOrder, amount, discount, tax) {
+function openEditModal(receivingOrderId, formId, supplierId, quantity, unitPrice, discount, tax) {
     document.getElementById('editReceivingOrderID').value = receivingOrderId;
     document.getElementById('editFormID').value = formId;
-    document.getElementById('editFormOrder').value = formOrder;
-    document.getElementById('editAmount').value = amount;
+    document.getElementById('editSupplierID').value = supplierId;
+    document.getElementById('editQuantity').value = quantity;
+    document.getElementById('editUnitPrice').value = unitPrice;
     document.getElementById('editDiscount').value = discount;
     document.getElementById('editTax').value = tax;
     document.getElementById('editModal').style.display = 'flex';

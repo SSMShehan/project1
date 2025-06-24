@@ -317,7 +317,7 @@ $result = $conn->query($sql_item_details);
                     <td><?php echo htmlspecialchars($row['Item_ID']); ?></td>
                     <td><?php echo htmlspecialchars($row['Name']); ?></td>
                     <td><?php echo htmlspecialchars($row['Description']); ?></td>
-                    <td>$<?php echo number_format($row['Cost'], 2); ?></td>
+                    <td>Rs <?php echo number_format($row['Cost'], 2); ?></td>
                     <td><span class="status <?php echo strtolower($row['Status']); ?>"><?php echo htmlspecialchars($row['Status']); ?></span></td>
                     <td><?php echo htmlspecialchars($row['Date_created']); ?></td>
                     <td><?php echo $row['Date_updated'] ? htmlspecialchars($row['Date_updated']) : 'NULL'; ?></td>

@@ -20,37 +20,69 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $salesCodes = $_POST['Sales_codes'];
         $client = $_POST['Client'];
         $price = $_POST['Price'];
-        $amount = $_POST['Amount'];
-        $stockID = $_POST['Stock_ID'];
+        $quantity = $_POST['Quantity']; // New quantity field
+        
+        // Calculate amount
+        $amount = $price * $quantity;
         
         // Validate item exists before insertion
         if (!validateItemExists($conn, $itemID)) {
             $message = 'Error: Item ID does not exist';
             $messageType = 'error';
-        } elseif (!validateStockExists($conn, $stockID)) {
-            $message = 'Error: Stock ID does not exist';
-            $messageType = 'error';
         } else {
-        
-            $sql = "INSERT INTO sales_list (Item_ID, Sales_codes, Client, Price, Amount, Stock_ID, Date_created, Date_updated) 
-                    VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+            // Start transaction
+            $conn->begin_transaction();
             
-            $stmt = $conn->prepare($sql);
-            if ($stmt) {
-                $stmt->bind_param("issddi", $itemID, $salesCodes, $client, $price, $amount, $stockID);
-                if ($stmt->execute()) {
-                    $message = 'Sales record created successfully!';
-                    $messageType = 'success';
-                    // Reset to first page after creation
-                    $current_page = 1;
-                    $offset = 0;
-                } else {
-                    $message = 'Error creating sales record: ' . $stmt->error;
-                    $messageType = 'error';
+            try {
+                // First check if we have enough stock
+                $stockCheck = $conn->prepare("SELECT Quantity FROM stock_details WHERE Item_ID = ?");
+                $stockCheck->bind_param("i", $itemID);
+                $stockCheck->execute();
+                $stockResult = $stockCheck->get_result();
+                $stockRow = $stockResult->fetch_assoc();
+                $currentStock = $stockRow['Quantity'] ?? 0;
+                $stockCheck->close();
+                
+                if ($currentStock < $quantity) {
+                    throw new Exception("Error: Not enough stock available. Only $currentStock items in stock.");
                 }
-                $stmt->close();
-            } else {
-                $message = 'Database error: ' . $conn->error;
+                
+                // Insert into sales_list
+                $sql = "INSERT INTO sales_list (Item_ID, Sales_codes, Client, Price, Quantity, Amount, Date_created, Date_updated) 
+                        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                
+                $stmt = $conn->prepare($sql);
+                if ($stmt) {
+                    $stmt->bind_param("issdid", $itemID, $salesCodes, $client, $price, $quantity, $amount);
+                    if ($stmt->execute()) {
+                        // Reduce stock quantity
+                        $updateStock = $conn->prepare("UPDATE stock_details SET 
+                            Quantity = Quantity - ?, 
+                            Date_updated = NOW()
+                            WHERE Item_ID = ?");
+                        $updateStock->bind_param("ii", $quantity, $itemID);
+                        
+                        if (!$updateStock->execute()) {
+                            throw new Exception('Error updating stock: ' . $updateStock->error);
+                        }
+                        $updateStock->close();
+                        
+                        $conn->commit();
+                        $message = 'Sales record created and stock updated successfully!';
+                        $messageType = 'success';
+                        // Reset to first page after creation
+                        $current_page = 1;
+                        $offset = 0;
+                    } else {
+                        throw new Exception('Error creating sales record: ' . $stmt->error);
+                    }
+                    $stmt->close();
+                } else {
+                    throw new Exception('Database error: ' . $conn->error);
+                }
+            } catch (Exception $e) {
+                $conn->rollback();
+                $message = $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -61,41 +93,86 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $salesCodes = $_POST['Sales_codes'];
         $client = $_POST['Client'];
         $price = $_POST['Price'];
-        $amount = $_POST['Amount'];
-        $stockID = $_POST['Stock_ID'];
+        $newQuantity = $_POST['Quantity'];
+        
+        // Calculate new amount
+        $newAmount = $price * $newQuantity;
         
         // Validate item exists before update
         if (!validateItemExists($conn, $itemID)) {
             $message = 'Error: Item ID does not exist';
             $messageType = 'error';
-        } elseif (!validateStockExists($conn, $stockID)) {
-            $message = 'Error: Stock ID does not exist';
-            $messageType = 'error';
         } else {
-        
-            $sql = "UPDATE sales_list SET 
-                    Item_ID = ?, 
-                    Sales_codes = ?, 
-                    Client = ?, 
-                    Price = ?, 
-                    Amount = ?, 
-                    Stock_ID = ?, 
-                    Date_updated = NOW() 
-                    WHERE Sales_ID = ?";
+            // Start transaction
+            $conn->begin_transaction();
             
-            $stmt = $conn->prepare($sql);
-            if ($stmt) {
-                $stmt->bind_param("issddii", $itemID, $salesCodes, $client, $price, $amount, $stockID, $salesID);
-                if ($stmt->execute()) {
-                    $message = 'Sales record updated successfully!';
-                    $messageType = 'success';
-                } else {
-                    $message = 'Error updating sales record: ' . $stmt->error;
-                    $messageType = 'error';
+            try {
+                // Get current sale details to calculate difference
+                $getCurrentSale = $conn->prepare("SELECT Quantity FROM sales_list WHERE Sales_ID = ?");
+                $getCurrentSale->bind_param("i", $salesID);
+                $getCurrentSale->execute();
+                $saleResult = $getCurrentSale->get_result();
+                $saleRow = $saleResult->fetch_assoc();
+                $currentQuantity = $saleRow['Quantity'];
+                $getCurrentSale->close();
+                
+                $quantityDifference = $newQuantity - $currentQuantity;
+                
+                // Check if we have enough stock to accommodate this change
+                if ($quantityDifference > 0) {
+                    $stockCheck = $conn->prepare("SELECT Quantity FROM stock_details WHERE Item_ID = ?");
+                    $stockCheck->bind_param("i", $itemID);
+                    $stockCheck->execute();
+                    $stockResult = $stockCheck->get_result();
+                    $stockRow = $stockResult->fetch_assoc();
+                    $currentStock = $stockRow['Quantity'];
+                    $stockCheck->close();
+                    
+                    if ($currentStock < $quantityDifference) {
+                        throw new Exception("Error: Not enough stock available for this update. Only $currentStock items in stock.");
+                    }
                 }
-                $stmt->close();
-            } else {
-                $message = 'Database error: ' . $conn->error;
+                
+                // Update sales record
+                $sql = "UPDATE sales_list SET 
+                        Item_ID = ?, 
+                        Sales_codes = ?, 
+                        Client = ?, 
+                        Price = ?, 
+                        Quantity = ?, 
+                        Amount = ?, 
+                        Date_updated = NOW() 
+                        WHERE Sales_ID = ?";
+                
+                $stmt = $conn->prepare($sql);
+                if ($stmt) {
+                    $stmt->bind_param("issdidi", $itemID, $salesCodes, $client, $price, $newQuantity, $newAmount, $salesID);
+                    if ($stmt->execute()) {
+                        // Update stock by applying the difference
+                        $updateStock = $conn->prepare("UPDATE stock_details SET 
+                            Quantity = Quantity - ?, 
+                            Date_updated = NOW()
+                            WHERE Item_ID = ?");
+                        $updateStock->bind_param("ii", $quantityDifference, $itemID);
+                        
+                        if (!$updateStock->execute()) {
+                            throw new Exception('Error updating stock: ' . $updateStock->error);
+                        }
+                        $updateStock->close();
+                        
+                        $conn->commit();
+                        $message = 'Sales record and stock updated successfully!';
+                        $messageType = 'success';
+                    } else {
+                        throw new Exception('Error updating sales record: ' . $stmt->error);
+                    }
+                    $stmt->close();
+                } else {
+                    throw new Exception('Database error: ' . $conn->error);
+                }
+            } catch (Exception $e) {
+                $conn->rollback();
+                $message = $e->getMessage();
                 $messageType = 'error';
             }
         }
@@ -111,22 +188,13 @@ $total_pages = ceil($total_records / $records_per_page);
 $sql_sales_list = "SELECT * FROM sales_list LIMIT $offset, $records_per_page";
 $result = $conn->query($sql_sales_list);
 
-// Fetch items and stocks for dropdowns
+// Fetch items for dropdown
 $items = $conn->query("SELECT Item_ID, Name FROM item_details");
-$stocks = $conn->query("SELECT Stock_ID FROM stock_details");
 
 // Validation functions
 function validateItemExists($conn, $itemID) {
     $stmt = $conn->prepare("SELECT Item_ID FROM item_details WHERE Item_ID = ?");
     $stmt->bind_param("i", $itemID);
-    $stmt->execute();
-    $stmt->store_result();
-    return $stmt->num_rows > 0;
-}
-
-function validateStockExists($conn, $stockID) {
-    $stmt = $conn->prepare("SELECT Stock_ID FROM stock_details WHERE Stock_ID = ?");
-    $stmt->bind_param("i", $stockID);
     $stmt->execute();
     $stmt->store_result();
     return $stmt->num_rows > 0;
@@ -340,8 +408,8 @@ function getItemName($conn, $itemID) {
             <th>Sales Codes</th>
             <th>Client</th>
             <th>Price</th>
+            <th>Quantity</th>
             <th>Amount</th>
-            <th>Stock ID</th>
             <th>Date Created</th>
             <th>Date Updated</th>
             <th>Actions</th>
@@ -357,9 +425,9 @@ function getItemName($conn, $itemID) {
                     <td><?php echo htmlspecialchars($itemName); ?></td>
                     <td><?php echo htmlspecialchars($row['Sales_codes']); ?></td>
                     <td><?php echo htmlspecialchars($row['Client']); ?></td>
-                    <td>$<?php echo number_format($row['Price'], 2); ?></td>
-                    <td><?php echo htmlspecialchars($row['Amount']); ?></td>
-                    <td><?php echo htmlspecialchars($row['Stock_ID']); ?></td>
+                    <td>Rs <?php echo number_format($row['Price'], 2); ?></td>
+                    <td><?php echo htmlspecialchars($row['Quantity']); ?></td>
+                    <td>Rs <?php echo number_format($row['Amount'], 2); ?></td>
                     <td><?php echo htmlspecialchars($row['Date_created']); ?></td>
                     <td><?php echo $row['Date_updated'] ? htmlspecialchars($row['Date_updated']) : 'NULL'; ?></td>
                     <td class="action-buttons">
@@ -369,8 +437,7 @@ function getItemName($conn, $itemID) {
                             '<?php echo htmlspecialchars($row['Sales_codes'], ENT_QUOTES); ?>',
                             '<?php echo htmlspecialchars($row['Client'], ENT_QUOTES); ?>',
                             '<?php echo $row['Price']; ?>',
-                            '<?php echo $row['Amount']; ?>',
-                            '<?php echo $row['Stock_ID']; ?>'
+                            '<?php echo $row['Quantity']; ?>'
                         )">
                             <i class="fas fa-edit"></i> Edit
                         </button>
@@ -383,7 +450,6 @@ function getItemName($conn, $itemID) {
             </tr>
         <?php endif; ?>
     </tbody>
-</table>
 </table>
 
 <!-- Pagination Navigation -->
@@ -458,21 +524,9 @@ function getItemName($conn, $itemID) {
             </div>
             
             <div class="form-group">
-                <label for="createAmount">Amount:</label>
-                <input type="number" id="createAmount" name="Amount" required>
+                <label for="createQuantity">Quantity:</label>
+                <input type="number" id="createQuantity" name="Quantity" required>
             </div>
-            
-            <div class="form-group">
-                <label for="createStockID">Stock ID:</label>
-                <select id="createStockID" name="Stock_ID" required>
-                    <?php while ($stock = $stocks->fetch_assoc()): ?>
-                        <option value="<?php echo $stock['Stock_ID']; ?>">
-                            <?php echo htmlspecialchars($stock['Stock_ID']); ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            
             
             <div class="form-group action-buttons">
                 <button type="submit" class="btn btn-submit">Create</button>
@@ -520,24 +574,9 @@ function getItemName($conn, $itemID) {
             </div>
             
             <div class="form-group">
-                <label for="editAmount">Amount:</label>
-                <input type="number" id="editAmount" name="Amount" required>
+                <label for="editQuantity">Quantity:</label>
+                <input type="number" id="editQuantity" name="Quantity" required>
             </div>
-            
-            <div class="form-group">
-                <label for="editStockID">Stock ID:</label>
-                <select id="editStockID" name="Stock_ID" required>
-                    <?php 
-                    // Reset pointer for stocks result
-                    $stocks->data_seek(0);
-                    while ($stock = $stocks->fetch_assoc()): ?>
-                        <option value="<?php echo $stock['Stock_ID']; ?>">
-                            <?php echo htmlspecialchars($stock['Stock_ID']); ?>
-                        </option>
-                    <?php endwhile; ?>
-                </select>
-            </div>
-            
             
             <div class="form-group action-buttons">
                 <button type="submit" class="btn btn-submit">Update</button>
@@ -549,14 +588,13 @@ function getItemName($conn, $itemID) {
 
 <script>
 // Function to open edit modal with data
-function openEditModal(salesId, itemId, salesCodes, client, price, amount, stockId) {
+function openEditModal(salesId, itemId, salesCodes, client, price, quantity) {
     document.getElementById('editSalesID').value = salesId;
     document.getElementById('editItemID').value = itemId;
     document.getElementById('editSalesCodes').value = salesCodes;
     document.getElementById('editClient').value = client;
     document.getElementById('editPrice').value = price;
-    document.getElementById('editAmount').value = amount;
-    document.getElementById('editStockID').value = stockId;
+    document.getElementById('editQuantity').value = quantity;
     document.getElementById('editModal').style.display = 'flex';
 }
 

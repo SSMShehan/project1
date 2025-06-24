@@ -18,10 +18,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Handle purchase creation
         $poCodes = $_POST['Po_codes'];
         $supplierID = $_POST['Supplier_ID'];
-        $amount = $_POST['Amount'];
-        $price = $_POST['Price'];
-        $discount = $_POST['Discount'];
-        $tax = $_POST['Tax'];
         $date = $_POST['Date'];
         
         // Validate supplier exists before insertion
@@ -29,13 +25,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $message = 'Error: Supplier ID does not exist';
             $messageType = 'error';
         } else {
-            // Removed Date_created and Date_updated columns
-            $sql = "INSERT INTO purchase_details (Po_codes, Supplier_ID, Amount, Price, Discount, Tax, Date) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO purchase_details (Po_codes, Supplier_ID, Date) 
+                    VALUES (?, ?, ?)";
             
             $stmt = $conn->prepare($sql);
             if ($stmt) {
-                $stmt->bind_param("siddids", $poCodes, $supplierID, $amount, $price, $discount, $tax, $date);
+                $stmt->bind_param("sis", $poCodes, $supplierID, $date);
                 if ($stmt->execute()) {
                     $message = 'Purchase record created successfully!';
                     $messageType = 'success';
@@ -57,10 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $purchaseID = $_POST['Purchase_ID'];
         $poCodes = $_POST['Po_codes'];
         $supplierID = $_POST['Supplier_ID'];
-        $amount = $_POST['Amount'];
-        $price = $_POST['Price'];
-        $discount = $_POST['Discount'];
-        $tax = $_POST['Tax'];
         $date = $_POST['Date'];
         
         // Validate supplier exists before update
@@ -68,20 +59,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $message = 'Error: Supplier ID does not exist';
             $messageType = 'error';
         } else {
-            // Removed Date_updated column
             $sql = "UPDATE purchase_details SET 
                     Po_codes = ?, 
                     Supplier_ID = ?, 
-                    Amount = ?, 
-                    Price = ?, 
-                    Discount = ?, 
-                    Tax = ?, 
                     Date = ?
                     WHERE Purchase_ID = ?";
             
             $stmt = $conn->prepare($sql);
             if ($stmt) {
-                $stmt->bind_param("siddidsi", $poCodes, $supplierID, $amount, $price, $discount, $tax, $date, $purchaseID);
+                $stmt->bind_param("sisi", $poCodes, $supplierID, $date, $purchaseID);
                 if ($stmt->execute()) {
                     $message = 'Purchase record updated successfully!';
                     $messageType = 'success';
@@ -103,8 +89,14 @@ $count_result = $conn->query("SELECT COUNT(*) AS total FROM purchase_details");
 $total_records = $count_result->fetch_assoc()['total'];
 $total_pages = ceil($total_records / $records_per_page);
 
-// Fetch paginated purchase details
-$sql_purchase_details = "SELECT * FROM purchase_details LIMIT $offset, $records_per_page";
+// Fetch paginated purchase details with calculated quantity and total price
+$sql_purchase_details = "SELECT pd.*, 
+                        COALESCE(SUM(rod.Quantity), 0) AS Total_Quantity,
+                        COALESCE(SUM(rod.Amount), 0) AS Total_Price
+                        FROM purchase_details pd
+                        LEFT JOIN receiving_order_details rod ON pd.Supplier_ID = rod.Supplier_ID
+                        GROUP BY pd.Purchase_ID
+                        LIMIT $offset, $records_per_page";
 $result = $conn->query($sql_purchase_details);
 
 // Fetch suppliers for dropdown
@@ -128,7 +120,6 @@ function getSupplierName($conn, $supplierID) {
     return $result->fetch_assoc()['Names'] ?? 'Unknown';
 }
 ?>
-
 
 <!DOCTYPE html>
 <html>
@@ -326,10 +317,8 @@ function getSupplierName($conn, $supplierID) {
             <th>Purchase ID</th>
             <th>PO Codes</th>
             <th>Supplier</th>
-            <th>Amount</th>
-            <th>Price</th>
-            <th>Discount</th>
-            <th>Tax</th>
+            <th>Total Quantity</th>
+            <th>Total Price</th>
             <th>Date</th>
             <th>Actions</th>
         </tr>
@@ -343,20 +332,14 @@ function getSupplierName($conn, $supplierID) {
                     <td><?php echo htmlspecialchars($row['Purchase_ID']); ?></td>
                     <td><?php echo htmlspecialchars($row['Po_codes']); ?></td>
                     <td><?php echo htmlspecialchars($supplierName); ?></td>
-                    <td><?php echo htmlspecialchars($row['Amount']); ?></td>
-                    <td>$<?php echo number_format($row['Price'], 2); ?></td>
-                    <td><?php echo htmlspecialchars($row['Discount']); ?>%</td>
-                    <td><?php echo htmlspecialchars($row['Tax']); ?>%</td>
+                    <td><?php echo htmlspecialchars($row['Total_Quantity']); ?></td>
+                    <td>Rs <?php echo number_format($row['Total_Price'], 2); ?></td>
                     <td><?php echo htmlspecialchars($row['Date']); ?></td>
                     <td class="action-buttons">
                         <button class="btn btn-edit" onclick="openEditModal(
                             '<?php echo $row['Purchase_ID']; ?>',
                             '<?php echo htmlspecialchars($row['Po_codes'], ENT_QUOTES); ?>',
                             '<?php echo $row['Supplier_ID']; ?>',
-                            '<?php echo $row['Amount']; ?>',
-                            '<?php echo $row['Price']; ?>',
-                            '<?php echo $row['Discount']; ?>',
-                            '<?php echo $row['Tax']; ?>',
                             '<?php echo $row['Date']; ?>'
                         )">
                             <i class="fas fa-edit"></i> Edit
@@ -366,7 +349,7 @@ function getSupplierName($conn, $supplierID) {
             <?php endwhile; ?>
         <?php else: ?>
             <tr>
-                <td colspan="9">No purchase records found</td>
+                <td colspan="7">No purchase records found</td>
             </tr>
         <?php endif; ?>
     </tbody>
@@ -435,26 +418,6 @@ function getSupplierName($conn, $supplierID) {
             </div>
             
             <div class="form-group">
-                <label for="createAmount">Amount:</label>
-                <input type="number" id="createAmount" name="Amount" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="createPrice">Price:</label>
-                <input type="number" id="createPrice" name="Price" step="0.01" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="createDiscount">Discount (%):</label>
-                <input type="number" id="createDiscount" name="Discount" step="0.01">
-            </div>
-            
-            <div class="form-group">
-                <label for="createTax">Tax (%):</label>
-                <input type="number" id="createTax" name="Tax" step="0.01">
-            </div>
-            
-            <div class="form-group">
                 <label for="createDate">Date:</label>
                 <input type="date" id="createDate" name="Date" required>
             </div>
@@ -481,37 +444,16 @@ function getSupplierName($conn, $supplierID) {
             </div>
             
             <div class="form-group">
-    <label for="editSupplierID">Supplier:</label>
-    <select id="editSupplierID" name="Supplier_ID" required>
-        <?php 
-        // Reset pointer for suppliers result
-        $suppliers->data_seek(0);
-        while ($supplier = $suppliers->fetch_assoc()): ?>
-            <option value="<?php echo $supplier['Supplier_ID']; ?>">
-                <?php echo htmlspecialchars($supplier['Names']); ?>
-            </option>
-        <?php endwhile; ?>
-    </select>
-</div>
-            
-            <div class="form-group">
-                <label for="editAmount">Amount:</label>
-                <input type="number" id="editAmount" name="Amount" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="editPrice">Price:</label>
-                <input type="number" id="editPrice" name="Price" step="0.01" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="editDiscount">Discount (%):</label>
-                <input type="number" id="editDiscount" name="Discount" step="0.01">
-            </div>
-            
-            <div class="form-group">
-                <label for="editTax">Tax (%):</label>
-                <input type="number" id="editTax" name="Tax" step="0.01">
+                <label for="editSupplierID">Supplier:</label>
+                <select id="editSupplierID" name="Supplier_ID" required>
+                    <?php 
+                    $suppliers->data_seek(0);
+                    while ($supplier = $suppliers->fetch_assoc()): ?>
+                        <option value="<?php echo $supplier['Supplier_ID']; ?>">
+                            <?php echo htmlspecialchars($supplier['Names']); ?>
+                        </option>
+                    <?php endwhile; ?>
+                </select>
             </div>
             
             <div class="form-group">
@@ -529,14 +471,10 @@ function getSupplierName($conn, $supplierID) {
 
 <script>
 // Function to open edit modal with data
-function openEditModal(purchaseId, poCodes, supplierId, amount, price, discount, tax, date) {
+function openEditModal(purchaseId, poCodes, supplierId, date) {
     document.getElementById('editPurchaseID').value = purchaseId;
     document.getElementById('editPoCodes').value = poCodes;
     document.getElementById('editSupplierID').value = supplierId;
-    document.getElementById('editAmount').value = amount;
-    document.getElementById('editPrice').value = price;
-    document.getElementById('editDiscount').value = discount;
-    document.getElementById('editTax').value = tax;
     document.getElementById('editDate').value = date;
     document.getElementById('editModal').style.display = 'flex';
 }

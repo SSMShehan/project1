@@ -341,7 +341,7 @@ function validateItemExists($conn, $itemID) {
                     <td><?php echo htmlspecialchars($row['Order_ID']); ?></td>
                     <td><?php echo htmlspecialchars($customerName); ?></td>
                     <td><?php echo htmlspecialchars($itemName); ?></td>
-                    <td>$<?php echo number_format($row['Price'], 2); ?></td>
+                    <td>Rs <?php echo number_format($row['Price'], 2); ?></td>
                     <td><?php echo htmlspecialchars($row['Quantity']); ?></td>
                     <td><?php echo htmlspecialchars($row['Date_created']); ?></td>
                     <td><?php echo $row['Date_updated'] ? htmlspecialchars($row['Date_updated']) : 'NULL'; ?></td>
