@@ -1,11 +1,55 @@
 <?php
 include '../addphp/navbar.php';
+include '../config/db_config.php'; // Make sure this path is correct
+
+// Create database connection
+$conn = new mysqli($servername, $username, $password, $dbname, $port);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// Function to get count from database
+function getCount($conn, $table) {
+    $sql = "SELECT COUNT(*) as count FROM $table";
+    $result = $conn->query($sql);
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        return $row['count'];
+    }
+    return 0;
+}
+
+// Function to get count with condition
+function getCountWithCondition($conn, $table, $condition) {
+    $sql = "SELECT COUNT(*) as count FROM $table WHERE $condition";
+    $result = $conn->query($sql);
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        return $row['count'];
+    }
+    return 0;
+}
+
+// Get counts from database
+$itemsCount = getCount($conn, 'products');
+$ordersCount = getCount($conn, 'sales_orders');
+$backordersCount = getCountWithCondition($conn, 'back_orders', "status = 'pending'");
+$stocksCount = getCount($conn, 'inventory');
+$purchaseOrdersCount = getCount($conn, 'purchase_orders');
+$receiveOrdersCount = getCountWithCondition($conn, 'purchase_orders', "status = 'received'");
+$finalProductsCount = getCountWithCondition($conn, 'products', "is_active = 1"); // Assuming active products are final
+$salesCount = getCountWithCondition($conn, 'sales_orders', "status = 'shipped' OR status = 'delivered'");
+$usersCount = getCount($conn, 'users');
+
+$conn->close();
 ?>
         <link rel="stylesheet" href="../styles/dashboard_style.css">
     <div class="dashboard-container">
     <!-- Header Section -->
     <div class="dashboard-header">
-        <h1>Welcome to Stock Management System - MGS Garment</h1>
+        <h1>Welcome to Stock Management System - GSM Garment</h1>
     </div>
 
     <!-- Cards Grid -->
@@ -13,15 +57,13 @@ include '../addphp/navbar.php';
         <!-- Items Card -->
             <a href="items.php">
                 <div class="dashboard-card">
-                
                     <div class="card-icon1">
                         <i class="fa-solid fa-shirt"></i>
                     </div>
                     <div class="card-content">
                         <h3>Items</h3>
-                        <div class="card-value">125</div>
+                        <div class="card-value"><?php echo $itemsCount; ?></div>
                     </div>
-                
                 </div>
             </a>
         
@@ -34,7 +76,7 @@ include '../addphp/navbar.php';
             </div>
             <div class="card-content">
                 <h3>Orders</h3>
-                <div class="card-value">18</div>
+                <div class="card-value"><?php echo $ordersCount; ?></div>
             </div>
             </div>
         </a>
@@ -47,7 +89,7 @@ include '../addphp/navbar.php';
             </div>
             <div class="card-content">
                 <h3>Backorders</h3>
-                <div class="card-value">5</div>
+                <div class="card-value"><?php echo $backordersCount; ?></div>
             </div>
             </div>
         </a>
@@ -60,7 +102,7 @@ include '../addphp/navbar.php';
             </div>
             <div class="card-content">
                 <h3>Stocks</h3>
-                <div class="card-value">342</div>
+                <div class="card-value"><?php echo $stocksCount; ?></div>
             </div>
             </div>
         </a>
@@ -73,7 +115,7 @@ include '../addphp/navbar.php';
             </div>
             <div class="card-content">
                 <h3>Purchase Orders</h3>
-                <div class="card-value">7</div>
+                <div class="card-value"><?php echo $purchaseOrdersCount; ?></div>
             </div>
             </div>
         </a>
@@ -86,7 +128,7 @@ include '../addphp/navbar.php';
             </div>
             <div class="card-content">
                 <h3>Receive Orders</h3>
-                <div class="card-value">4</div>
+                <div class="card-value"><?php echo $receiveOrdersCount; ?></div>
             </div>
             </div>
         </a>
@@ -99,7 +141,7 @@ include '../addphp/navbar.php';
             </div>
             <div class="card-content">
                 <h3>Final Products</h3>
-                <div class="card-value">89</div>
+                <div class="card-value"><?php echo $finalProductsCount; ?></div>
             </div>
             </div>
         </a>
@@ -112,7 +154,7 @@ include '../addphp/navbar.php';
                 </div>
                 <div class="card-content">
                     <h3>Sales</h3>
-                    <div class="card-value">2</div>
+                    <div class="card-value"><?php echo $salesCount; ?></div>
                 </div>
             </div>
         </a>
@@ -125,11 +167,10 @@ include '../addphp/navbar.php';
                 </div>
                 <div class="card-content">
                     <h3>Users</h3>
-                    <div class="card-value">4</div>
+                    <div class="card-value"><?php echo $usersCount; ?></div>
                 </div>
             </div>
         </a>
     </div>
     </div>
     </div>
-    
