@@ -1,12 +1,12 @@
 <?php
 require_once '../config/db_config.php';
 
-$sqlforname = "SELECT system_short_name FROM system_settings WHERE id = 1";
+$sqlforname = "SELECT setting_value FROM system_settings WHERE setting_id = 1";
 $resultforname = $conn->query($sqlforname);
 
 if ($resultforname && $resultforname->num_rows > 0) {
     $row = $resultforname->fetch_assoc();
-    $companyName = $row['system_short_name'];
+    $companyName = $row['setting_value'];
 }
 
 // Start session
@@ -22,7 +22,7 @@ if (!isset($_SESSION["id"])) {
 $user_id = $_SESSION["id"];
 
 // Fetch the logged-in user's details
-$sql = "SELECT * FROM users WHERE id = ?";
+$sql = "SELECT * FROM users WHERE user_id = ?";
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
