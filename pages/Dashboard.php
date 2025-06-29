@@ -144,20 +144,20 @@ while ($row = $lowStockResult->fetch_assoc()) {
             </a>
 
             <!-- Final Products Card -->
-            <a href="Finalproduct.php">
+            <a href="reports.php">
                 <div class="dashboard-card">
                     <div class="card-icon7">
                         <i class="fa-solid fa-check-to-slot"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Final Products</h3>
+                        <h3>Inventory Reports</h3>
                         <div class="card-value"><?= $stats['final_products'] ?></div>
                     </div>
                 </div>
             </a>
 
             <!-- Sales Card -->
-            <a href="Sales.php">
+            <!-- <a href="Sales.php">
                 <div class="dashboard-card success">
                     <div class="card-icon8">
                         <i class="fas fa-chart-line"></i>
@@ -167,10 +167,10 @@ while ($row = $lowStockResult->fetch_assoc()) {
                         <div class="card-value"><?= $stats['sales'] ?></div>
                     </div>
                 </div>
-            </a>
+            </a> -->
 
             <!-- Users Card -->
-            <a href="Users.php">
+            <!-- <a href="Users.php">
                 <div class="dashboard-card">
                     <div class="card-icon9">
                         <i class="fas fa-users"></i>
@@ -181,7 +181,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                 </div>
             </a>
-        </div>
+        </div> -->
 
         <!-- Recent Activities Section -->
         <div class="recent-activities">
