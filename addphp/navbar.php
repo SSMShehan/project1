@@ -79,8 +79,8 @@ $user = $result->fetch_assoc();
                     <li><a href="suppliers.php"><i class="fas fa-boxes"></i> Suppliers Management</a></li>
                     <li><a href="sales_orders.php"><i class="fas fa-file-invoice-dollar"></i>  Sales Management</a></li>
                     <li><a href="customers.php"><i class="fas fa-truck"></i> Customers Management</a></li>
-                    <li><a href="Finalproduct.php"><i class="fa-solid fa-check-to-slot"></i> Final product</a></li>
-                    <li><a href="Sales.php"><i class="fas fa-chart-line"></i> Sales</a></li>
+                    <li><a href="reports.php"><i class="fa-solid fa-check-to-slot"></i> Inventory Reports</a></li>
+                    <!-- <li><a href="Sales.php"><i class="fas fa-chart-line"></i> Sales</a></li> -->
                     <!-- <li><a href="Users.php"><i class="fas fa-users"></i> Users</a></li> -->
                     <li><a href="Setting.php"><i class="fas fa-cog"></i> Setting</a></li>
                     <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Log out</a></li>
