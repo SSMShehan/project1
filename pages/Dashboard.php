@@ -66,78 +66,78 @@ while ($row = $lowStockResult->fetch_assoc()) {
         <!-- Cards Grid -->
         <div class="cards-grid">
             <!-- Items Card -->
-            <a href="items.php">
+            <a href="Products.php">
                 <div class="dashboard-card">
                     <div class="card-icon1">
                         <i class="fa-solid fa-shirt"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Items</h3>
+                        <h3>Products</h3>
                         <div class="card-value"><?= $stats['items'] ?></div>
                     </div>
                 </div>
             </a>
 
             <!-- Orders Card -->
-            <a href="order.php">
+            <a href="inventory.php">
                 <div class="dashboard-card">
                     <div class="card-icon2">
                         <i class="fas fa-shopping-cart"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Orders</h3>
+                        <h3>inventory</h3>
                         <div class="card-value"><?= $stats['orders'] ?></div>
                     </div>
                 </div>
             </a>
 
             <!-- Backorders Card -->
-            <a href="Backorders.php">
+            <a href="purchase_orders.php">
                 <div class="dashboard-card warning">
                     <div class="card-icon3">
                         <i class="fas fa-exchange-alt"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Backorders</h3>
+                        <h3>Purchase orders</h3>
                         <div class="card-value"><?= $stats['backorders'] ?></div>
                     </div>
                 </div>
             </a>
 
             <!-- Stocks Card -->
-            <a href="Stock.php">
+            <a href="suppliers.php">
                 <div class="dashboard-card">
                     <div class="card-icon4">
                         <i class="fas fa-boxes"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Stocks</h3>
+                        <h3>Suppliers Management</h3>
                         <div class="card-value"><?= $stats['stocks'] ?></div>
                     </div>
                 </div>
             </a>
 
             <!-- Purchase Orders Card -->
-            <a href="Purchasesorders.php">
+            <a href="sales_orders.php">
                 <div class="dashboard-card">
                     <div class="card-icon5">
                         <i class="fas fa-file-invoice-dollar"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Purchase Orders</h3>
+                        <h3>Sales Management</h3>
                         <div class="card-value"><?= $stats['purchase_orders'] ?></div>
                     </div>
                 </div>
             </a>
 
             <!-- Receive Orders Card -->
-            <a href="Receiveorders.php">
+            <a href="customers.php">
                 <div class="dashboard-card highlight">
                     <div class="card-icon6">
                         <i class="fas fa-truck"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Receive Orders</h3>
+                        <h3>Customers Management</h3>
                         <div class="card-value"><?= $stats['received_orders'] ?></div>
                     </div>
                 </div>
