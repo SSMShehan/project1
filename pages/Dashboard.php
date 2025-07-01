@@ -4,19 +4,7 @@ include '../addphp/navbar.php';
 // Check if user is logged in
 
 
-// Get all dashboard statistics
-$stats = [
-    'items' => $conn->query("SELECT COUNT(*) FROM products")->fetch_row()[0],
-    'orders' => $conn->query("SELECT COUNT(*) FROM sales_orders WHERE status != 'cancelled'")->fetch_row()[0],
-    'backorders' => $conn->query("SELECT COUNT(*) FROM back_orders WHERE status = 'pending'")->fetch_row()[0],
-    'stocks' => $conn->query("SELECT SUM(quantity_on_hand) FROM inventory")->fetch_row()[0],
-    'purchase_orders' => $conn->query("SELECT COUNT(*) FROM purchase_orders WHERE status = 'ordered'")->fetch_row()[0],
-    'received_orders' => $conn->query("SELECT COUNT(*) FROM purchase_orders WHERE status = 'received'")->fetch_row()[0],
-    'final_products' => $conn->query("SELECT COUNT(*) FROM products WHERE is_active = TRUE")->fetch_row()[0], // Adjusted for final products
-    'sales' => $conn->query("SELECT COUNT(*) FROM sales_orders WHERE status = 'shipped'")->fetch_row()[0],
-    'users' => $conn->query("SELECT COUNT(*) FROM users WHERE is_active = TRUE")->fetch_row()[0],
-    'inventory_value' => $conn->query("SELECT calculate_inventory_value()")->fetch_row()[0]
-];
+
 
 // Get recent activities
 $activitiesResult = $conn->query("
@@ -73,7 +61,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Products</h3>
-                        <div class="card-value"><?= $stats['items'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -86,7 +74,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>inventory</h3>
-                        <div class="card-value"><?= $stats['orders'] ?></div>
+                       
                     </div>
                 </div>
             </a>
@@ -99,7 +87,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Purchase orders</h3>
-                        <div class="card-value"><?= $stats['backorders'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -112,7 +100,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Suppliers Management</h3>
-                        <div class="card-value"><?= $stats['stocks'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -125,7 +113,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Sales Management</h3>
-                        <div class="card-value"><?= $stats['purchase_orders'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -138,7 +126,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Customers Management</h3>
-                        <div class="card-value"><?= $stats['received_orders'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -151,7 +139,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Inventory Reports</h3>
-                        <div class="card-value"><?= $stats['final_products'] ?></div>
+                       
                     </div>
                 </div>
             </a>
