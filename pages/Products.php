@@ -483,7 +483,7 @@ $result = $stmt->get_result();
     <form method="GET" action="">
         <div class="filter-row">
             <div class="filter-group">
-                <label for="filter_sku">SKU:</label>
+                <label for="filter_sku">ID :</label>
                 <input type="text" id="filter_sku" name="filter_sku" value="<?php echo htmlspecialchars($filter_sku); ?>">
             </div>
             
@@ -528,7 +528,7 @@ $result = $stmt->get_result();
 <table>
     <thead>
         <tr>
-            <th>SKU</th>
+            <th>ID </th>
             <th>Name</th>
             <th>Category</th>
             <th>Unit Price</th>
@@ -626,7 +626,7 @@ $result = $stmt->get_result();
             <input type="hidden" name="create" value="1">
             
             <div class="form-group">
-                <label for="createSku">SKU:</label>
+                <label for="createSku">ID :</label>
                 <input type="text" id="createSku" name="sku" required>
             </div>
             
