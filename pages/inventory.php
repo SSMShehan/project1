@@ -482,6 +482,7 @@ $result = $stmt->get_result();
     <?php
     // Get total inventory value
     $total_value = $conn->query("SELECT calculate_inventory_value() as value")->fetch_assoc()['value'];
+
     
     // Get low stock count
     $low_stock = $conn->query("SELECT COUNT(*) as count FROM vw_products_to_reorder")->fetch_assoc()['count'];

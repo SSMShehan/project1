@@ -12,10 +12,16 @@ $stats = [
     'stocks' => $conn->query("SELECT SUM(quantity_on_hand) FROM inventory")->fetch_row()[0],
     'purchase_orders' => $conn->query("SELECT COUNT(*) FROM purchase_orders WHERE status = 'ordered'")->fetch_row()[0],
     'received_orders' => $conn->query("SELECT COUNT(*) FROM purchase_orders WHERE status = 'received'")->fetch_row()[0],
-    'final_products' => $conn->query("SELECT COUNT(*) FROM products WHERE is_active = TRUE")->fetch_row()[0], // Adjusted for final products
+    'final_products' => $conn->query("SELECT COUNT(*) FROM products WHERE is_active = TRUE")->fetch_row()[0],
     'sales' => $conn->query("SELECT COUNT(*) FROM sales_orders WHERE status = 'shipped'")->fetch_row()[0],
     'users' => $conn->query("SELECT COUNT(*) FROM users WHERE is_active = TRUE")->fetch_row()[0],
-    'inventory_value' => $conn->query("SELECT calculate_inventory_value()")->fetch_row()[0]
+    // Fixed inventory value calculation:
+    'inventory_value' => $conn->query("
+        SELECT SUM(p.cost_price * i.quantity_on_hand) AS value 
+        FROM products p 
+        JOIN inventory i ON p.product_id = i.product_id 
+        WHERE p.is_active = 1
+    ")->fetch_row()[0] ?? 0
 ];
 
 // Get recent activities

@@ -197,8 +197,9 @@ body {
 }
 
 
-.fa-users,.fa-cog,.fa-sign-out-alt{
+.fa-sign-out-alt{
     margin-left: 30px;
+    color: #dc3545;
 }
 
 

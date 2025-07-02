@@ -30,7 +30,6 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 ?>
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -56,35 +55,50 @@ $user = $result->fetch_assoc();
             <input type="text" class="search" placeholder="Search" />
             <button class="notif-btn">&#128276;</button>
             <div class="profile">
-               <!-- <span class="profile-icon"><?php echo strtoupper(substr($user['username'], 0, 1)); ?></span> 
+                <span class="profile-icon"><?php echo strtoupper(substr($user['username'], 0, 1)); ?></span> 
                 <div>
-                    <strong>
-                    <?php echo htmlspecialchars($user['username']); ?> -->
-                    </strong><br>
+                    <strong><?php echo htmlspecialchars($user['username']); ?></strong><br>
                     <small>Product Manager</small>
                 </div>
             </div>
         </div>
     </nav>
 
-
     <div class="dashboard-container">
         <aside class="sidebar">
             <nav>
                 <ul class="menu-items">
-                    <li><a href="Dashboard.php" ><i class="fas fa-dashboard"></i> Dashboard</a></li>
+                    <li><a href="Dashboard.php"><i class="fas fa-dashboard"></i> Dashboard</a></li>
                     <li><a href="Products.php"><i class="fa-solid fa-shirt"></i> Products</a></li>
-                    <li><a href="inventory.php"><i class="fas fa-shopping-cart"></i> inventory</a></li>
-                    <li><a href="purchase_orders.php"><i class="fas fa-exchange-alt"></i> Purchase orders</a></li>
-                    <li><a href="suppliers.php"><i class="fas fa-boxes"></i> Suppliers Management</a></li>
-                    <li><a href="sales_orders.php"><i class="fas fa-file-invoice-dollar"></i>  Sales Management</a></li>
-                    <li><a href="customers.php"><i class="fas fa-truck"></i> Customers Management</a></li>
-                    <li><a href="reports.php"><i class="fa-solid fa-check-to-slot"></i> Inventory Reports</a></li>
-                    <!-- <li><a href="Sales.php"><i class="fas fa-chart-line"></i> Sales</a></li> -->
-                    <!-- <li><a href="Users.php"><i class="fas fa-users"></i> Users</a></li> -->
-                    <li><a href="Setting.php"><i class="fas fa-cog"></i> Setting</a></li>
-                    <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Log out</a></li>
+                    <li><a href="inventory.php"><i class="fas fa-shopping-cart"></i>Products Inventory</a></li> <br>
+                    
+                    <!-- Purchasing Section -->
+                    <li class="menu-header">PURCHASING</li><hr>
+                  
+                    <li><a href="raw_material_purchase_orders.php"><i class="fas fa-exchange-alt"></i> Raw Material Purchases</a></li>
+                    <li><a href="suppliers.php"><i class="fas fa-boxes"></i> Suppliers</a></li><br>
+                    
+                    
+                    
+                    <!-- Manufacturing Section -->
+                    <li class="menu-header">MANUFACTURING</li><hr>
+                    <li><a href="manufacturing_orders.php"><i class="fas fa-industry"></i> Manufacturing Orders</a></li>
+                    <li><a href="raw_materials.php"><i class="fas fa-boxes"></i> Raw Materials Inventory</a></li><br>
 
+                     <!-- Sales Section -->
+                    <li class="menu-header">SALES</li><hr>
+                    <li><a href="sales_orders.php"><i class="fas fa-file-invoice-dollar"></i> Sales Orders</a></li>
+                      <li><a href="purchase_orders.php"><i class="fas fa-exchange-alt"></i> Product Purchases</a></li><br>
+                    
+                    <!-- Reports -->
+                    <li class="menu-header">REPORTS</li><hr>
+                    <li><a href="reports.php"><i class="fa-solid fa-chart-bar"></i> Inventory Reports</a></li><br>
+                    
+                    <!-- Settings -->
+                    <li class="menu-header">SYSTEM</li><hr>
+                    <li><a href="customers.php"><i class="fas fa-users"></i> Customers</a></li>
+                    <li><a href="Setting.php"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Log out</a></li>
                 </ul>
             </nav>
         </aside>
