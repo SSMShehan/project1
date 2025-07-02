@@ -79,7 +79,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Products</h3>
-                        <div class="card-value"><?= $stats['items'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -92,7 +92,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>inventory</h3>
-                        <div class="card-value"><?= $stats['orders'] ?></div>
+                       
                     </div>
                 </div>
             </a>
@@ -105,7 +105,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Purchase orders</h3>
-                        <div class="card-value"><?= $stats['backorders'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -118,7 +118,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Suppliers Management</h3>
-                        <div class="card-value"><?= $stats['stocks'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -131,7 +131,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Sales Management</h3>
-                        <div class="card-value"><?= $stats['purchase_orders'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -144,7 +144,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Customers Management</h3>
-                        <div class="card-value"><?= $stats['received_orders'] ?></div>
+                        
                     </div>
                 </div>
             </a>
@@ -157,7 +157,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Inventory Reports</h3>
-                        <div class="card-value"><?= $stats['final_products'] ?></div>
+                       
                     </div>
                 </div>
             </a>

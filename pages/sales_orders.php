@@ -57,31 +57,34 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Handle order shipment
         $so_id = $_POST['so_id'];
         
-        try {
-            $conn->autocommit(FALSE);
-            
-            // Call the stored procedure to process shipment
-            $stmt = $conn->prepare("CALL ship_sales_order(?, ?)");
-            $stmt->bind_param("ii", $so_id, $_SESSION['user_id']);
-            $stmt->execute();
-            
-            if ($stmt->affected_rows > 0) {
-                $conn->commit();
-                $message = 'Order shipped successfully!';
-                $messageType = 'success';
-            } else {
-                $conn->rollback();
-                $message = 'Error processing shipment: No rows affected';
-                $messageType = 'error';
-            }
-            $stmt->close();
-        } catch (Exception $e) {
-            $conn->rollback();
-            $message = 'Error processing shipment: ' . $e->getMessage();
-            $messageType = 'error';
-        } finally {
-            $conn->autocommit(TRUE);
-        }
+       try {
+    $conn->autocommit(FALSE);
+    
+    // Call the stored procedure to process shipment
+    $stmt = $conn->prepare("CALL ship_sales_order(?, ?)");
+    if (!$stmt) {
+        throw new Exception("Failed to prepare statement: " . $conn->error);
+    }
+    $stmt->bind_param("ii", $so_id, $_SESSION['user_id']);
+    if (!$stmt->execute()) {
+        throw new Exception("Failed to execute procedure: " . $stmt->error);
+    }
+    
+    if ($stmt->affected_rows > 0) {
+        $conn->commit();
+        $message = 'Order shipped successfully!';
+        $messageType = 'success';
+    } else {
+        $conn->rollback();
+        $message = 'Error processing shipment: No rows affected';
+        $messageType = 'error';
+    }
+    $stmt->close();
+} catch (Exception $e) {
+    $conn->rollback();
+    $message = 'Error processing shipment: ' . $e->getMessage();
+    $messageType = 'error';
+}
     }
 }
 
