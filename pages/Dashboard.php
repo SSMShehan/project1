@@ -104,7 +104,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
                         <i class="fas fa-exchange-alt"></i>
                     </div>
                     <div class="card-content">
-                        <h3>Purchase orders</h3>
+                        <h3>Raw Material Purchase Orders</h3>
                         
                     </div>
                 </div>
@@ -118,6 +118,30 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                     <div class="card-content">
                         <h3>Suppliers Management</h3>
+                        
+                    </div>
+                </div>
+            </a>
+
+            <a href="manufacturing_orders.php">
+                <div class="dashboard-card">
+                    <div class="card-icon4">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Manufacturing Orders</h3>
+                        
+                    </div>
+                </div>
+            </a>
+
+            <a href="raw_materials.php">
+                <div class="dashboard-card">
+                    <div class="card-icon4">
+                        <i class="fas fa-shopping-cart"></i>
+                    </div>
+                    <div class="card-content">
+                        <h3>Raw Materials Inventory</h3>
                         
                     </div>
                 </div>
@@ -190,7 +214,7 @@ while ($row = $lowStockResult->fetch_assoc()) {
         </div> -->
 
         <!-- Recent Activities Section -->
-        <div class="recent-activities">
+        <!-- <div class="recent-activities">
             <h2>Recent Activities</h2>
             <?php foreach ($activities as $activity): ?>
                 <div class="activity-item">
@@ -206,10 +230,10 @@ while ($row = $lowStockResult->fetch_assoc()) {
                     </div>
                 </div>
             <?php endforeach; ?>
-        </div>
+        </div> -->
 
         <!-- Low Stock Alert Section -->
-        <div class="low-stock-alerts">
+        <!-- <div class="low-stock-alerts">
             <h2>Low Stock Alerts</h2>
             <?php if (count($lowStockItems) > 0): ?>
                 <?php foreach ($lowStockItems as $item): ?>
@@ -226,6 +250,6 @@ while ($row = $lowStockResult->fetch_assoc()) {
                 <p>No low stock items at this time.</p>
             <?php endif; ?>
         </div>
-    </div>
+    </div> -->
 </body>
 </html>

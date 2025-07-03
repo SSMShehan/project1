@@ -88,7 +88,7 @@ $user = $result->fetch_assoc();
                      <!-- Sales Section -->
                     <li class="menu-header">SALES</li><hr>
                     <li><a href="sales_orders.php"><i class="fas fa-file-invoice-dollar"></i> Sales Orders</a></li>
-                      <li><a href="purchase_orders.php"><i class="fas fa-exchange-alt"></i> Product Purchases</a></li><br>
+                      <!-- <li><a href="purchase_orders.php"><i class="fas fa-exchange-alt"></i> Product Purchases</a></li><br> -->
                     
                     <!-- Reports -->
                     <li class="menu-header">REPORTS</li><hr>
@@ -97,7 +97,7 @@ $user = $result->fetch_assoc();
                     <!-- Settings -->
                     <li class="menu-header">SYSTEM</li><hr>
                     <li><a href="customers.php"><i class="fas fa-users"></i> Customers</a></li>
-                    <li><a href="Setting.php"><i class="fas fa-cog"></i> Settings</a></li>
+                    <!-- <li><a href="Setting.php"><i class="fas fa-cog"></i> Settings</a></li> -->
                     <li><a href="logout.php"><i class="fas fa-sign-out-alt"></i> Log out</a></li>
                 </ul>
             </nav>
